@@ -1,0 +1,36 @@
+---
+- hosts: miners
+  vars:
+    name: value  
+  remote_user: root
+  tasks: 
+  # sudo apt-key adv –keyserver keyserver.ubuntu.com –recv-keys E084DAB9
+  - name: Add apt-key to ubuntu for CRAN
+    apt-key: id=E084DAB9 url=keyserver.ubuntu.com state=present
+  # sudo add-apt-repository ‘deb http://star-www.st-andrews.ac.uk/cran/bin/linux/ubuntu trusty/’
+  - name: Add the CRAN repo to our apt sources
+    apt_repository: "deb http://star-www.st-andrews.ac.uk/cran/bin/linux/ubuntu trusty/"
+
+  # sudo apt-get update
+  - name: Update apt cache
+    apt: update_cache=yes
+
+  - name: Install r packages
+    apt: name={{ item }} state=present
+    with_items:
+      - r-base
+      - r-base-dev
+
+  # Download and install RStudio
+  # wget http://download1.rstudio.org/rstudio-0.98.1062-amd64.deb
+  - name: Download RStudio
+    get_url: url=http://download1.rstudio.org/rstudio-0.98.1062-amd64.deb dest="/tmp/"
+    register: rstudio_deb
+
+  # sudo dpkg -i *.deb
+  - name: Install RStudio
+    apt: deb=/tmp/{{rstudio-deb}}
+
+  # rm *.deb
+  - name: Remove rstudio .deb
+    file: path=/tmp/{{rstudio-deb}} state=absent
