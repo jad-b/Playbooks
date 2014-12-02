@@ -15,8 +15,9 @@
   - name: Update apt cache
     apt: update_cache=yes
 
+  # sudo apt-get install r-base r-base-dev
   - name: Install r packages
-    apt: name={{ item }} state=present
+    apt: name={{ item }} state=latest
     with_items:
       - r-base
       - r-base-dev
@@ -29,8 +30,8 @@
 
   # sudo dpkg -i *.deb
   - name: Install RStudio
-    apt: deb=/tmp/{{rstudio-deb}}
+    apt: deb=/tmp/{{rstudio_deb}}
 
   # rm *.deb
   - name: Remove rstudio .deb
-    file: path=/tmp/{{rstudio-deb}} state=absent
+    file: path=/tmp/{{rstudio_deb}} state=absent
