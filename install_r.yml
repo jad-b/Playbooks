@@ -1,8 +1,6 @@
 ---
 - hosts: miners
-  vars:
-    name: value  
-  remote_user: root
+  sudo: yes
   tasks: 
   # sudo apt-key adv –keyserver keyserver.ubuntu.com –recv-keys E084DAB9
   - name: Add apt-key to ubuntu for CRAN
