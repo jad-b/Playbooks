@@ -6,6 +6,8 @@ apt_repo_keys:
 apt_repo_key_urls:
   google:
     url: https://dl-ssl.google.com/linux/linux_signing_key.pub
+  oracle:
+    url: https://www.virtualbox.org/download/oracle_vbox.asc
 
 apt_repos:
   - ppa:webupd8team/sublime-text-3
@@ -19,6 +21,7 @@ apt_repos:
   - "'deb-src http://ppa.launchpad.net/paolorotolo/android-studio/ubuntu trusty main'"
   - "'deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main'"
   - "'deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu saucy main'"
+  - "'deb http://download.virtualbox.org/virtualbox/debian trusty contrib'"
 
 apps:
   ### Packages affecting the OS and foundational functionality
@@ -32,6 +35,7 @@ apps:
   - compizconfig-settings-manager
   - gstreamer0.10-ffmpeg
   - ubuntu-restricted-extras
+  - virtualbox-4.3
   # - oracle-java7-installer
   # - oracle-java8-installer
   ### Apps for direct use by me
