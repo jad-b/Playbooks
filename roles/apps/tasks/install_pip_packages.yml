@@ -1,0 +1,7 @@
+---
+
+- name: Copy reqs file to system
+  copy: src=requirements.txt dest=~/requirements.txt
+
+- name: Install system-level pip packages
+  pip: requirements=~/requirements.txt 

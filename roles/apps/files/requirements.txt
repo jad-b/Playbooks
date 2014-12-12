@@ -1,0 +1,6 @@
+virtualenv
+virtualenvwrapper
+
+pep8
+pyflakes
+pylint

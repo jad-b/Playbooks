@@ -4,7 +4,7 @@ apt_repo_keys:
     id: 36A1D7869245C8950F966E92D8576A8BA88D21E9
 
 apt_repo_key_urls:
-  google_music_manager:
+  google:
     url: https://dl-ssl.google.com/linux/linux_signing_key.pub
 
 apt_repos:
@@ -21,11 +21,7 @@ apt_repos:
   - "'deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu saucy main'"
 
 apps:
-  # Apps for direct use by me
-  - sublime-text-installer
-  - lxc-docker
-  - google-musicmanager-beta
-  # Packages affecting the OS and foundational functionality
+  ### Packages affecting the OS and foundational functionality
   - python-dev
   - python-software-properties
   - python-pip
@@ -36,7 +32,14 @@ apps:
   - compizconfig-settings-manager
   - gstreamer0.10-ffmpeg
   - ubuntu-restricted-extras
+  # - oracle-java7-installer
+  # - oracle-java8-installer
+  ### Apps for direct use by me
+  - sublime-text-installer
+  - lxc-docker
+  - google-musicmanager-beta
+  - google-chrome-stable
   - pipelight-multi
-    # - oracle-java7-installer
-    # - oracle-java8-installer
+  - keepassx
+  - meld
 
