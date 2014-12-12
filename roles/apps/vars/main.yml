@@ -9,15 +9,16 @@ apt_repo_key_urls:
 
 apt_repos:
   - ppa:webupd8team/sublime-text-3
+  - ppa:webupd8team/java
   - ppa:mc3man/trusty-media
   - ppa:pipelight/stable
-  - deb https://get.docker.com/ubuntu docker main
-  - deb http://dl.google.com/linux/musicmanager/deb/ stable main
-  - deb http://dl.google.com/linux/chrome/deb/ stable main
-  - deb-src http://ppa.launchpad.net/thefanclub/grive-tools/ubuntu trusty main
-  - deb-src http://ppa.launchpad.net/paolorotolo/android-studio/ubuntu trusty main
-  - deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main
-  - deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu saucy main
+  - "'deb https://get.docker.com/ubuntu docker main'"
+  - "'deb http://dl.google.com/linux/musicmanager/deb/ stable main'"
+  - "'deb http://dl.google.com/linux/chrome/deb/ stable main'"
+  - "'deb-src http://ppa.launchpad.net/thefanclub/grive-tools/ubuntu trusty main'"
+  - "'deb-src http://ppa.launchpad.net/paolorotolo/android-studio/ubuntu trusty main'"
+  - "'deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main'"
+  - "'deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu saucy main'"
 
 apps:
   # Apps for direct use by me
@@ -26,13 +27,16 @@ apps:
   - google-musicmanager-beta
   # Packages affecting the OS and foundational functionality
   - python-dev
+  - python-software-properties
   - python-pip
-  - python-pip3
+  - python3-pip
   - git
+  - openvpn
   - unity-tweak-tool
-  - compiz-settings-manager
+  - compizconfig-settings-manager
   - gstreamer0.10-ffmpeg
   - ubuntu-restricted-extras
   - pipelight-multi
-  - oracle-java7-installer
-  - oracle-java8-installer
+    # - oracle-java7-installer
+    # - oracle-java8-installer
+
