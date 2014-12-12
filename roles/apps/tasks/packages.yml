@@ -1,0 +1,41 @@
+---
+- hosts: base
+  sudo: yes
+  vars:
+    dropbox_tar: dropbox.tar
+  tasks:
+    - name: Add Apt keys by id & keyserver
+      apt_key: id={{item.key.id}} keyserver=keyserver.ubuntu.com state=present
+      with_items: apt_repo_keys
+
+    - name: Add Apt keys by url
+      apt_key: url={{item.key.url}} state=present
+      with_items: apt_repo_key_urls
+
+  - name: Add Apt repositories
+    apt_repository: repo={{ item }}
+    with_items: apt_repos
+
+
+  # sudo apt-get update
+  - name: Update apt cache
+    apt: update_cache=yes
+
+  # sudo apt-get install r-base r-base-dev
+  - name: Install new packages
+    apt: name={{ item }} state=latest
+    with_items: apps
+
+  - name: Enable silverlight compatibility
+    shell: pipelight-plugin --enable silverlight && pipelight-plugin --enable widevine
+
+  - name: Download Dropbox
+    get_url: url=https://www.dropbox.com/download?plat=lnx.x86_64 dest=~/Downloads/{{dropbox_tar}}
+
+  - name: Unarchive the Dropbox deb
+    unarchive: src=~/Downloads/{{dropbox_tar}} dest=~/Downloads/dropbox/
+
+  - name: Run Dropbox daemon
+    shell: ./.dropbox-dist/dropboxd chdir=~/Downloads/dropbox/
+
+

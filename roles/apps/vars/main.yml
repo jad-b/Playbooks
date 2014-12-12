@@ -1,0 +1,38 @@
+---
+apt_repo_keys:
+  docker:
+    id: 36A1D7869245C8950F966E92D8576A8BA88D21E9
+
+apt_repo_key_urls:
+  google_music_manager:
+    url: https://dl-ssl.google.com/linux/linux_signing_key.pub
+
+apt_repos:
+  - ppa:webupd8team/sublime-text-3
+  - ppa:mc3man/trusty-media
+  - ppa:pipelight/stable
+  - deb https://get.docker.com/ubuntu docker main
+  - deb http://dl.google.com/linux/musicmanager/deb/ stable main
+  - deb http://dl.google.com/linux/chrome/deb/ stable main
+  - deb-src http://ppa.launchpad.net/thefanclub/grive-tools/ubuntu trusty main
+  - deb-src http://ppa.launchpad.net/paolorotolo/android-studio/ubuntu trusty main
+  - deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main
+  - deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu saucy main
+
+apps:
+  # Apps for direct use by me
+  - sublime-text-installer
+  - lxc-docker
+  - google-musicmanager-beta
+  # Packages affecting the OS and foundational functionality
+  - python-dev
+  - python-pip
+  - python-pip3
+  - git
+  - unity-tweak-tool
+  - compiz-settings-manager
+  - gstreamer0.10-ffmpeg
+  - ubuntu-restricted-extras
+  - pipelight-multi
+  - oracle-java7-installer
+  - oracle-java8-installer

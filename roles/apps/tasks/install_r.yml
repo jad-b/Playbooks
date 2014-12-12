@@ -3,7 +3,7 @@
   sudo: yes
   vars:
     rstudio_deb: rstudio.deb
-  tasks:
+  tasks: 
   # sudo apt-key adv –keyserver keyserver.ubuntu.com –recv-keys E084DAB9
   - name: Add apt-key to ubuntu for CRAN
     apt_key: id=E084DAB9 keyserver=keyserver.ubuntu.com state=present
