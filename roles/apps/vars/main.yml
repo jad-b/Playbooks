@@ -6,44 +6,46 @@ apt_repo_keys:
 apt_repo_key_urls:
   google:
     url: https://dl-ssl.google.com/linux/linux_signing_key.pub
-  oracle:
+  virtualbox:
     url: https://www.virtualbox.org/download/oracle_vbox.asc
 
 apt_repos:
-  - ppa:webupd8team/sublime-text-3
-  - ppa:webupd8team/java
+  - "'deb http://dl.google.com/linux/chrome/deb/ stable main'"
+  - "'deb http://dl.google.com/linux/musicmanager/deb/ stable main'"
+  - "'deb http://download.virtualbox.org/virtualbox/debian trusty contrib'"
+  - "'deb https://get.docker.com/ubuntu docker main'"
+  - "'deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main'"
+  - "'deb-src http://ppa.launchpad.net/paolorotolo/android-studio/ubuntu trusty main'"
+  - "'deb-src http://ppa.launchpad.net/thefanclub/grive-tools/ubuntu trusty main'"
+  - "'deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu saucy main'"
+  - ppa:didrocks/ubuntu-developer-tools-center
   - ppa:mc3man/trusty-media
   - ppa:pipelight/stable
-  - "'deb https://get.docker.com/ubuntu docker main'"
-  - "'deb http://dl.google.com/linux/musicmanager/deb/ stable main'"
-  - "'deb http://dl.google.com/linux/chrome/deb/ stable main'"
-  - "'deb-src http://ppa.launchpad.net/thefanclub/grive-tools/ubuntu trusty main'"
-  - "'deb-src http://ppa.launchpad.net/paolorotolo/android-studio/ubuntu trusty main'"
-  - "'deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main'"
-  - "'deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu saucy main'"
-  - "'deb http://download.virtualbox.org/virtualbox/debian trusty contrib'"
+  - ppa:webupd8team/java
+  - ppa:webupd8team/sublime-text-3
 
 apps:
   ### Packages affecting the OS and foundational functionality
-  - python-dev
-  - python-software-properties
-  - python-pip
-  - python3-pip
-  - git
-  - openvpn
-  - unity-tweak-tool
   - compizconfig-settings-manager
+  - git
   - gstreamer0.10-ffmpeg
+  - openvpn
+  - python-dev
+  - python-pip
+  - python-software-properties
+  - python3-pip
   - ubuntu-restricted-extras
+  - unity-tweak-tool
   - virtualbox-4.3
   # - oracle-java7-installer
   # - oracle-java8-installer
   ### Apps for direct use by me
-  - sublime-text-installer
-  - lxc-docker
-  - google-musicmanager-beta
   - google-chrome-stable
-  - pipelight-multi
+  - google-musicmanager-beta
   - keepassx
+  - lxc-docker
   - meld
+  - pipelight-multi
+  - sublime-text-installer
+  - ubuntu-developer-tools-center
 

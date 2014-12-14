@@ -3,6 +3,6 @@
   hosts: 127.0.0.1
   sudo: yes
   roles:
-    # - apps 
-    - dyn
+    - apps 
+    # - dyn
     # - datasci 
