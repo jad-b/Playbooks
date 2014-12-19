@@ -28,6 +28,7 @@ apps:
   ### Packages affecting the OS and foundational functionality
   - compizconfig-settings-manager
   - git
+  - curl
   - gstreamer0.10-ffmpeg
   - openvpn
   - python-dev
@@ -48,4 +49,3 @@ apps:
   - pipelight-multi
   - sublime-text-installer
   - ubuntu-developer-tools-center
-
