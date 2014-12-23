@@ -4,3 +4,7 @@ virtualenvwrapper
 pep8
 pyflakes
 pylint
+
+git-up
+
+-e git+https://github.com/ipython/ipython.git@master#egg=ipython
