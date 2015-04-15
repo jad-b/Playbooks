@@ -8,7 +8,7 @@
   command:  wget https://bootstrap.pypa.io/get-pip.py | python get-pip.py --user
   when: pip_result|failed
 
-- name: Install virtualenv
+- name: Install user's pip packages
   pip: name={{ item }}
-       extra_args='--user'
+       extra_args='--user -U'
   with_items: {{ pip_packages }}

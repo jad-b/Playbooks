@@ -6,4 +6,4 @@ pip_packages:
   - pyflakes
   - pylint
   - git-up
-  - -e git+https://github.com/ipython/ipython.git@master#egg=ipython
+  - git+https://github.com/ipython/ipython.git@master#egg=ipython

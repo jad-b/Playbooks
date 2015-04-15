@@ -1,6 +1,7 @@
 ---
-- name: Provision a basic jdb laptop
+- name: Provision a basic laptop
   hosts: 127.0.0.1
   roles:
-    - apps
+    - system
+    # - user
     # - datasci
