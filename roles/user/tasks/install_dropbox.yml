@@ -1,0 +1,10 @@
+---
+
+- name: Download Dropbox
+  get_url: url=https://www.dropbox.com/download?plat=lnx.x86_64 dest=~/Downloads/dropbox_tar
+
+- name: Unarchive the Dropbox deb
+  unarchive: src=~/Downloads/dropbox_tar dest=~/Downloads/dropbox/
+
+- name: Run Dropbox daemon
+  shell: ./.dropbox-dist/dropboxd chdir=~/Downloads/dropbox/

@@ -1,0 +1,22 @@
+---
+
+- name: Check for local Node.js installation
+  command: which node | grep {{ user_local }}
+  register: nodejs_result
+
+- name: Download node.js from GitHub
+  git: repo=https://github.com/joyent/node.git
+       dest=/tmp/nodejs
+       version=master
+  when: nodejs_result|failed
+
+- name: Configure, build, and install Node.js locally
+  command: ./configure --prefix={{ user_local }} && make && sudo make install
+  when: nodejs_result|failed
+
+- name: Fix ownership of sudo-installed Node.js files
+  file: path=/home/{{ remote_user{{ user_local }}
+        owner={{ remote_user }}
+        group={{ remote_user }}
+        recurse=yes
+  when: nodejs_result|failed

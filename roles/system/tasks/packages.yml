@@ -9,7 +9,7 @@
   with_dict: apt_repo_key_urls
 
 - name: Add Apt repositories
-  apt_repository: repo={{ item }} 
+  apt_repository: repo={{ item }}
   with_items: apt_repos
 
 - name: Update apt cache
@@ -22,13 +22,3 @@
 ### The following require user interaction
 # - name: Enable silverlight compatibility
 #   shell: pipelight-plugin --enable silverlight && pipelight-plugin --enable widevine
-# 
-# - name: Download Dropbox
-#   get_url: url=https://www.dropbox.com/download?plat=lnx.x86_64 dest=~/Downloads/dropbox_tar
-# 
-# - name: Unarchive the Dropbox deb
-#   unarchive: src=~/Downloads/dropbox_tar dest=~/Downloads/dropbox/
-# 
-# - name: Run Dropbox daemon
-#   shell: ./.dropbox-dist/dropboxd chdir=~/Downloads/dropbox/
-

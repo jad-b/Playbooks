@@ -1,4 +1,6 @@
 ---
+sudo: yes
+
 apt_repo_keys:
   docker:
     id: 36A1D7869245C8950F966E92D8576A8BA88D21E9
@@ -23,18 +25,24 @@ apt_repos:
   - ppa:pipelight/stable
   - ppa:webupd8team/java
   - ppa:webupd8team/sublime-text-3
+  # tmux
+  - ppa:pi-rho/dev
+  # Newer Git
+  - ppa:git-core/ppa
 
 apps:
   ### Packages affecting the OS and foundational functionality
+  - build-essential
   - compizconfig-settings-manager
-  - git
   - curl
+  - git
   - gstreamer0.10-ffmpeg
   - openvpn
   - python-dev
   - python-pip
   - python-software-properties
   - python3-pip
+  - software-properties-common
   - ubuntu-restricted-extras
   - unity-tweak-tool
   - virtualbox-4.3
@@ -46,6 +54,8 @@ apps:
   - keepassx
   - lxc-docker
   - meld
+  - nodejs
   - pipelight-multi
   - sublime-text-installer
+  - tmux=1.9a-1~ppa1~t
   - ubuntu-developer-tools-center
