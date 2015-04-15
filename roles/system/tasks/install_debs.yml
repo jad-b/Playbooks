@@ -1,0 +1,17 @@
+---
+
+- name: Download debians
+  get_url: >
+    url={{ item.value.url }}
+    dest=~/Downloads/{{ item.key }}.deb
+  with_dict: debian_packages
+
+- name: Install the debians
+  apt: deb=~/Downloads/{{ item.key }}.deb
+  with_dict: debian_packages
+
+- name: Remove the debian packages
+  file: >
+    path=~/Downloads/{{ item.key }}.deb
+    state=absent
+  with_dict: debian_packages

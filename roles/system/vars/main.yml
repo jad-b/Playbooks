@@ -29,6 +29,12 @@ apt_repos:
   # Newer Git
   - ppa:git-core/ppa
 
+debian_packages:
+  insync:
+    url: http://s.insynchq.com/builds/insync_1.2.6.35101-trusty_amd64.deb
+  vagrant:
+    url: https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb
+
 apps:
   ### Packages affecting the OS and foundational functionality
   - build-essential
