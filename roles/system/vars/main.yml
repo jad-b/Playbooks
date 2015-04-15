@@ -18,7 +18,6 @@ apt_repos:
   - "'deb https://get.docker.com/ubuntu docker main'"
   - "'deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main'"
   - "'deb-src http://ppa.launchpad.net/paolorotolo/android-studio/ubuntu trusty main'"
-  - "'deb-src http://ppa.launchpad.net/thefanclub/grive-tools/ubuntu trusty main'"
   - "'deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu saucy main'"
   - ppa:didrocks/ubuntu-developer-tools-center
   - ppa:mc3man/trusty-media
@@ -57,5 +56,12 @@ apps:
   - nodejs
   - pipelight-multi
   - sublime-text-installer
-  - tmux=1.9a-1~ppa1~t
+  - tmux
   - ubuntu-developer-tools-center
+
+network_apps:
+  - iftop
+  - netcat
+  - nmap
+  - traceroute
+  - tshark

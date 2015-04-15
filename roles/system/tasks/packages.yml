@@ -19,6 +19,10 @@
   apt: name={{ item }} state=latest
   with_items: apps
 
+- name: Install network tools
+  apt: name={{ item }} state=latest
+  with_items: network_apps
+
 ### The following require user interaction
 # - name: Enable silverlight compatibility
 #   shell: pipelight-plugin --enable silverlight && pipelight-plugin --enable widevine
