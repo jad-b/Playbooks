@@ -10,6 +10,8 @@ apt_repo_key_urls:
     url: https://dl-ssl.google.com/linux/linux_signing_key.pub
   virtualbox:
     url: https://www.virtualbox.org/download/oracle_vbox.asc
+  insync:
+    url: https://d2t3ff60b2tol4.cloudfront.net/services@insynchq.com.gpg.key
 
 apt_repos:
   - "'deb http://dl.google.com/linux/chrome/deb/ stable main'"
@@ -19,6 +21,7 @@ apt_repos:
   - "'deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main'"
   - "'deb-src http://ppa.launchpad.net/paolorotolo/android-studio/ubuntu trusty main'"
   - "'deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu saucy main'"
+  - "'deb http://apt.insynchq.com/ubunty trusty non-free contrib'"
   - ppa:didrocks/ubuntu-developer-tools-center
   - ppa:mc3man/trusty-media
   - ppa:pipelight/stable
@@ -64,6 +67,7 @@ apps:
   - sublime-text-installer
   - tmux
   - ubuntu-developer-tools-center
+  - insync
 
 network_apps:
   - iftop
