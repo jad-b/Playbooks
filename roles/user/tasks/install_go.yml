@@ -1,0 +1,17 @@
+---
+
+- name: Check for godeb
+  command: type godeb
+  register: godeb_exists
+
+- name: Install godeb
+  command: sudo wget https://godeb.s3.amazonaws.com/godeb-amd64.tar.gz | tar -v -C ~/.local/bin -xz
+  when: godeb_exists|failed
+
+- name: Check if Go has been installed
+  command: go --version | grep {{go_version}}
+  register: go_version_installed
+
+- name: Download and install go
+  command: ~/.local/bin/godeb install {{go_version}}
+  when: go_version_installed|failed
