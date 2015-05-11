@@ -21,7 +21,7 @@ apt_repos:
   - "'deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main'"
   - "'deb-src http://ppa.launchpad.net/paolorotolo/android-studio/ubuntu trusty main'"
   - "'deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu saucy main'"
-  - "'deb http://apt.insynchq.com/ubunty trusty non-free contrib'"
+  - "'deb http://apt.insynchq.com/ubuntu trusty non-free contrib'"
   - ppa:didrocks/ubuntu-developer-tools-center
   - ppa:mc3man/trusty-media
   - ppa:pipelight/stable
@@ -33,8 +33,6 @@ apt_repos:
   - ppa:git-core/ppa
 
 debian_packages:
-  insync:
-    url: http://s.insynchq.com/builds/insync_1.2.6.35101-trusty_amd64.deb
   vagrant:
     url: https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb
 
@@ -46,6 +44,7 @@ apps:
   - git
   - gstreamer0.10-ffmpeg
   - openvpn
+  - network-manager-openvpn
   - python-dev
   - python-pip
   - python-software-properties
