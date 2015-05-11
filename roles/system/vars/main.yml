@@ -58,6 +58,7 @@ apps:
   ### Apps for direct use by me
   - google-chrome-stable
   - google-musicmanager-beta
+  - insync
   - keepassx
   - lxc-docker
   - meld
@@ -66,7 +67,9 @@ apps:
   - sublime-text-installer
   - tmux
   - ubuntu-developer-tools-center
-  - insync
+  # Android Studio
+  - ant
+  - android-studio
 
 network_apps:
   - iftop
