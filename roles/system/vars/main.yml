@@ -15,13 +15,11 @@ apt_repo_key_urls:
 
 apt_repos:
   - "'deb http://dl.google.com/linux/chrome/deb/ stable main'"
-  - "'deb http://dl.google.com/linux/musicmanager/deb/ stable main'"
   - "'deb http://download.virtualbox.org/virtualbox/debian trusty contrib'"
   - "'deb https://get.docker.com/ubuntu docker main'"
   - "'deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main'"
   - "'deb-src http://ppa.launchpad.net/paolorotolo/android-studio/ubuntu trusty main'"
   - "'deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu saucy main'"
-  - "'deb http://apt.insynchq.com/ubuntu trusty non-free contrib'"
   - ppa:didrocks/ubuntu-developer-tools-center
   - ppa:mc3man/trusty-media
   - ppa:pipelight/stable
