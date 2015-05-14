@@ -52,6 +52,7 @@ apps:
   - libsqlite3-dev 
   - libssl-dev 
   - tk-dev
+  - xclip
 
   - python-dev
   - python-pip

@@ -1,9 +1,9 @@
 ---
 pip_packages:
-  - virtualenv
-  - virtualenvwrapper
+  - git+https://github.com/ipython/ipython.git@master#egg=ipython
+  - git-up
   - pep8
   - pyflakes
   - pylint
-  - git-up
-  - git+https://github.com/ipython/ipython.git@master#egg=ipython
+  - virtualenv
+  - virtualenvwrapper
