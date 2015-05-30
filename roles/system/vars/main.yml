@@ -14,7 +14,7 @@ apt_repo_key_urls:
     url: https://d2t3ff60b2tol4.cloudfront.net/services@insynchq.com.gpg.key
 
 apt_repos:
-  - "'deb http://dl.google.com/linux/chrome/deb/ stable main'"
+  # - "'deb http://dl.google.com/linux/chrome/deb/ stable main'"
   - "'deb http://download.virtualbox.org/virtualbox/debian trusty contrib'"
   - "'deb https://get.docker.com/ubuntu docker main'"
   - "'deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu trusty main'"
@@ -40,6 +40,7 @@ apps:
   - compizconfig-settings-manager
   - curl
   - git
+  - htop
   - gstreamer0.10-ffmpeg
   - openvpn
   - network-manager-openvpn
@@ -65,8 +66,8 @@ apps:
   # - oracle-java7-installer
   # - oracle-java8-installer
   ### Apps for direct use by me
-  - google-chrome-stable
-  - google-musicmanager-beta
+  # - google-chrome-stable
+  # - google-musicmanager-beta
   - insync
   - keepassx
   - lxc-docker
@@ -76,9 +77,29 @@ apps:
   - sublime-text-installer
   - tmux
   - ubuntu-developer-tools-center
+  - vim-gnome
   # Android Studio
   - ant
   - android-studio
+  # Bluetooth
+  - bluez
+  - bluez-alsa
+  - bluez-audio
+  - bluez-btsco
+  - bluez-compat
+  - bluez-cups
+  - bluez-dbg
+  - bluez-gstreamer
+  - bluez-hcidump
+  - bluez-pcmcia-support
+  - bluez-tools
+  - bluez-utils
+  - python-bluez
+  - bluewho
+  - indicator-bluetooth
+  - libbluetooth-dev
+  - libgnome-bluetooth11
+  - libbluetooth3
 
 network_apps:
   - iftop
