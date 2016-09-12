@@ -4,10 +4,6 @@
   apt_key: id={{item.value.id}} keyserver=keyserver.ubuntu.com state=present
   with_dict: apt_repo_keys
 
-- name: Add Apt keys by url
-  apt_key: url={{item.value.url}} state=present
-  with_dict: apt_repo_key_urls
-
 - name: Add Apt repositories
   apt_repository: repo={{ item }}
   with_items: apt_repos
@@ -22,7 +18,3 @@
 - name: Install network tools
   apt: name={{ item }} state=latest
   with_items: network_apps
-
-### The following require user interaction
-# - name: Enable silverlight compatibility
-#   shell: pipelight-plugin --enable silverlight && pipelight-plugin --enable widevine

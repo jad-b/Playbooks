@@ -1,0 +1,13 @@
+---
+- name: Install vim
+  apt:
+    name: vim-gnome
+    state: latest
+
+- name: Install Vundle
+  git:
+    repo: https://github.com/VundleVim/Vundle.vim.git
+    dest: ~/.vim/bundle/Vundle.vim
+
+- name: Install vim plugins
+  command: vim +PluginInstall +qall
