@@ -1,0 +1,39 @@
+[user]
+    name = jad-b
+    email = j.american.db@gmail.com
+[alias]
+    discard = checkout --
+    hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+    ignore = update-index --assume-unchanged
+    unignore = update-index --no-assume-unchanged
+    last = log -1 HEAD
+    pop = stash pop
+    unstage = reset HEAD --
+[branch]
+    autosetupmerge = always
+    autosetuprebase = always
+[color]
+    ui = auto
+[core]
+    editor = vim
+    excludesfile = ~/.gitignore
+[credential]
+    helper = cache --timeout=32400
+[diff]
+    tool = meld
+[difftool]
+    prompt = false
+[help]
+    autocorrect = 1
+[push]
+    default = current
+[web]
+    browser = firefox
+[merge]
+    tool = meld
+[mergetool]
+    prompt = false
+[rerere]
+    enabled = true
+[user]
+    signingkey = 7C383024

@@ -1,0 +1,21 @@
+#!/bin/bash -eu
+
+# Return dictionary of Instance IDs & node names
+list-instances() {
+    aws ec2 describe-instances --output text \
+        --query 'Reservations[*].Instances[*].{ID:InstanceId,Name:Tags[?Key==`Name`]}' \
+        --filters "Name=key-name,Values=$AWS_KEYPAIR"
+}
+
+list-dns() {
+    aws --profile "$1" ec2 describe-instances --output text \
+        --query 'Reservations[*].Instances[*].[InstanceId, State.Name, PrivateIP]'
+}
+
+stop-instances() {
+    aws --profile "$1" ec2 stop-instances --instance-ids "$(list-instances "$1" | tr '\n' ' ')"
+}
+
+start-instances() {
+    aws --profile "$1" ec2 start-instances
+}

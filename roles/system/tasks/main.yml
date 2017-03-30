@@ -1,3 +1,10 @@
 ---
 
+- include: dropbox.yml
+  tags: dropbox
+
+- include: docker.yml
+  tags: docker
+
 - include: packages.yml
+  tags: packages

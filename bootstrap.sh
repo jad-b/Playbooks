@@ -7,4 +7,4 @@ sudo apt-get install python-pip python-dev
 pip install --user -U ansible
 
 # Run the ansible playbooks
-. run.sh
+run.sh

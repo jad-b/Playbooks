@@ -1,7 +1,7 @@
 ---
-- name: Provision a basic laptop
+- name: Provision an Ubuntu machine for development
   hosts: 127.0.0.1
   roles:
-    - system
-    # - user
-    # - datasci
+    - role: system
+      become: yes
+    - user

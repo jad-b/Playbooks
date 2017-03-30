@@ -1,0 +1,36 @@
+---
+- name: Install Docker HTTPS Repo Pre-reqs
+  apt:
+    name: "{{ item }}"
+  with_items:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+
+- name: Install Docker's GPG Key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+
+- name: Grab Ubuntu distribution
+  command: lsb_release -cs
+  register: ubuntu_distro
+
+- name: Add Apt repositories
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ubuntu_distro.stdout }} stable"
+    state: present
+
+- name: Update apt cache
+  apt: update_cache=yes
+
+- name: Install Docker
+  apt:
+    name: docker-ce
+    state: latest
+
+- name: Add "{{ ansible_ssh_user }}" to docker group
+  user:
+    append: yes
+    groups: docker
+    name: "{{ ansible_ssh_user }}"

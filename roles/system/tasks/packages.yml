@@ -1,20 +1,16 @@
 ---
-
-- name: Add Apt keys by id & keyserver
-  apt_key: id={{item.value.id}} keyserver=keyserver.ubuntu.com state=present
-  with_dict: apt_repo_keys
-
-- name: Add Apt repositories
-  apt_repository: repo={{ item }}
-  with_items: apt_repos
-
 - name: Update apt cache
-  apt: update_cache=yes
+  apt:
+    update_cache: yes
 
 - name: Install new packages
-  apt: name={{ item }} state=latest
-  with_items: apps
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items: "{{ apps }}"
 
 - name: Install network tools
-  apt: name={{ item }} state=latest
-  with_items: network_apps
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items: "{{ network_apps }}"

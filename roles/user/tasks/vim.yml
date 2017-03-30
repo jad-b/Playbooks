@@ -1,8 +1,4 @@
----
-- name: Install vim
-  apt:
-    name: vim-gnome
-    state: latest
+# Setup Vim just the way I like it.
 
 - name: Install Vundle
   git:
@@ -10,4 +6,5 @@
     dest: ~/.vim/bundle/Vundle.vim
 
 - name: Install vim plugins
-  command: vim +PluginInstall +qall
+  command: vim -E -s -c "source ~/.vimrc" +PluginInstall +qall
+  ignore_errors: true

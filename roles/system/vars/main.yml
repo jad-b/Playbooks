@@ -1,18 +1,4 @@
 ---
-apt_repo_keys:
-  docker:
-    id: 36A1D7869245C8950F966E92D8576A8BA88D21E9
-  insync:
-    id: ACCAF35C
-
-apt_repos:
-  - "'deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu saucy main'"
-  - "'deb http://apt.insynchq.com/ubuntu xenial non-free contrib'"
-  # - "'deb https://get.docker.com/ubuntu docker main'"
-  # - ppa:didrocks/ubuntu-developer-tools-center
-  # - ppa:mc3man/trusty-media
-  # - ppa:webupd8team/java
-
 apps:
   ### Packages affecting the OS and foundational functionality
   - build-essential
@@ -20,15 +6,20 @@ apps:
   - compiz-plugins
   - git
   - htop
-  - gstreamer0.10-ffmpeg
   - network-manager-openvpn-gnome
+  - software-properties-common
+  - ubuntu-restricted-extras
+  - unity-tweak-tool
   - xclip
+  - meld
+  - tmux
+  - ubuntu-developer-tools-center
   # Python system libraries
   - libbz2-dev
   - libc6-dev
   - libgdbm-dev
   - libncursesw5-dev
-  - libreadline5-dev
+  - libreadline6-dev
   - libsqlite3-dev
   - libssl-dev
   - tk-dev
@@ -36,14 +27,9 @@ apps:
   - python-pip
   - python-software-properties
   - python3-pip
-  - software-properties-common
-  - ubuntu-restricted-extras
-  - unity-tweak-tool
-  - insync
-  - meld
-  - tmux
-  - ubuntu-developer-tools-center
-  - vim-gnome
+  - python3-dev
+  - libncurses5-dev
+  - libzmq-dev
   # # Bluetooth
   # - bluez
   # - bluez-alsa
@@ -63,9 +49,6 @@ apps:
   # - libbluetooth-dev
   # - libgnome-bluetooth11
   # - libbluetooth3
-  # # iPython
-  - libncurses5-dev
-  - libzmq-dev
 
 network_apps:
   - iftop

@@ -1,0 +1,16 @@
+---
+- name: Symlink in config files
+  file:
+    src: "{{ playbook_dir }}/roles/user/files/{{ item }}"
+    dest: "/home/{{ ansible_ssh_user }}/{{ item }}"
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    state: link
+  with_items:
+    - .bash_aliases  
+    - .bashrc
+    - .vimrc
+    - .bash_profile
+    - .gitconfig
+    - .inputrc
+    - .tmux.conf
