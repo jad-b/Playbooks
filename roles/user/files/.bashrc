@@ -144,8 +144,6 @@ esac
 #     ;;
 # esac
 
-# Filetypes I'm sick of seeing in a basic ls
-HIDDEN_TYPES='*.py[cod]'
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
     if [ -r ~/.dircolors ]; then
@@ -154,7 +152,7 @@ if [ -x /usr/bin/dircolors ]; then
 		eval "$(dircolors -b)"
 	fi
 	# shellcheck disable=SC2139
-    alias ls="ls --color=auto --group-directories-first --hide=$HIDDEN_TYPES"
+    alias ls="ls --color=auto --group-directories-first"
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
 
@@ -162,10 +160,6 @@ if [ -x /usr/bin/dircolors ]; then
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
     alias rgrep='rgrep --color=auto'
-fi
-
-if [ -d "$HOME/.dircolors" ]; then
-    eval `dircolors /home/jdb/.dir_colors/dircolors`
 fi
 ### End prompt coloring ###
 

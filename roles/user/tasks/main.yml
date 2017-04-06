@@ -1,6 +1,7 @@
 ---
 # - include: install_pip.yml
 - include: linkconf.yml
-  tags: config
+  tags: linkconf
+
 - include: vim.yml
   tags: vim

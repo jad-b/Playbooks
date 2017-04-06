@@ -12,8 +12,10 @@ apps:
   - unity-tweak-tool
   - xclip
   - meld
+  - tree
   - tmux
   - ubuntu-developer-tools-center
+  - vim-gnome
   # Python system libraries
   - libbz2-dev
   - libc6-dev

@@ -6,8 +6,9 @@
     owner: "{{ ansible_ssh_user }}"
     group: "{{ ansible_ssh_user }}"
     state: link
+    force: yes
   with_items:
-    - .bash_aliases  
+    - .bash_aliases
     - .bashrc
     - .vimrc
     - .bash_profile
