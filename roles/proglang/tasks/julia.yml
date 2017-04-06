@@ -1,0 +1,19 @@
+---
+- name: Install apt dependencies
+  apt:
+    name: "{{ item }}"
+  become: yes
+  with_items:
+    - gcc
+    - hdf5-tools
+    - libzmq3-dev
+    - python2.7-dev
+
+- name: Install Python dependencies
+  pip:
+    name: "{{ item }}"
+    extra_args: --user
+  with_items:
+    - ipywidgets
+    - jupyter
+    - matplotlib

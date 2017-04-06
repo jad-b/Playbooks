@@ -2,20 +2,21 @@
 apps:
   ### Packages affecting the OS and foundational functionality
   - build-essential
-  - compizconfig-settings-manager
   - compiz-plugins
+  - compizconfig-settings-manager
   - git
   - htop
+  - meld
   - network-manager-openvpn-gnome
+  - powertop
   - software-properties-common
+  - tmux
+  - tree
+  - ubuntu-developer-tools-center
   - ubuntu-restricted-extras
   - unity-tweak-tool
-  - xclip
-  - meld
-  - tree
-  - tmux
-  - ubuntu-developer-tools-center
   - vim-gnome
+  - xclip
   # Python system libraries
   - libbz2-dev
   - libc6-dev

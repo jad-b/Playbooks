@@ -1,0 +1,7 @@
+---
+# The rustup installer has an interactive command prompt.
+# This doesn't work. Yet.
+- expect:
+    command: /bin/bash -c "curl https://sh.rustup.rs -sSf | sh"
+    responses:
+      .*: "1"

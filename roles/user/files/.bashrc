@@ -218,6 +218,12 @@ export GOPATH="$HOME/go"
 export PATH="$PATH:$GOPATH/bin:/usr/local/bin"
 export GOMAXPROCS=$(nproc)
 
+# Julia
+JULIA_PRO="$HOME/julia/JuliaPro-0.5.1.1"
+if [ -d "$JULIA_PRO" ]; then
+    export PATH="$PATH:$JULIA_PRO"
+fi
+
 pre_complete=$(now)
 # Array of files within .completions
 COMPLETIONS=(~/.completions/*)

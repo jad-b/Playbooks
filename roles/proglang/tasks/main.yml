@@ -1,0 +1,7 @@
+---
+- include: rust.yml
+  tags: rust
+- include: julia.yml
+  tags: julia
+- include: haskell.yml
+  tags: haskell

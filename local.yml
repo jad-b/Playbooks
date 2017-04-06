@@ -4,4 +4,4 @@
   roles:
     - system
     - user
-    # - proglang
+    - proglang
