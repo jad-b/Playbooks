@@ -15,7 +15,7 @@ apps:
   - ubuntu-developer-tools-center
   - ubuntu-restricted-extras
   - unity-tweak-tool
-  - vim-gnome
+  - vim
   - xclip
   # Python system libraries
   - libbz2-dev

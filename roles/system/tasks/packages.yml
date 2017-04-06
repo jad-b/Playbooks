@@ -1,4 +1,8 @@
 ---
+- name:  Add special Apt repos
+  apt_repository:
+    repo:  'ppa:jonathonf/vim'
+
 - name: Update apt cache
   apt:
     update_cache: yes
