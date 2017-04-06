@@ -9,8 +9,5 @@
     state: latest
   with_items: "{{ apps }}"
 
-- name: Install network tools
-  apt:
-    name: "{{ item }}"
-    state: latest
-  with_items: "{{ network_apps }}"
+- name:
+  command: apt upgrade -y

@@ -33,6 +33,12 @@ apps:
   - python3-dev
   - libncurses5-dev
   - libzmq-dev
+  # Network Tools
+  - iftop
+  - netcat
+  - nmap
+  - traceroute
+  - tshark
   # # Bluetooth
   # - bluez
   # - bluez-alsa
@@ -52,10 +58,3 @@ apps:
   # - libbluetooth-dev
   # - libgnome-bluetooth11
   # - libbluetooth3
-
-network_apps:
-  - iftop
-  - netcat
-  - nmap
-  - traceroute
-  - tshark
