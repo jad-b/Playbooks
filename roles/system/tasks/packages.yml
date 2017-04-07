@@ -6,6 +6,7 @@
   with_items:
     - 'ppa:jonathonf/vim'
     - 'ppa:ubuntu-mozilla-daily/firefox-aurora'
+    - 'ppa:teejee2008/ppa'
 
 - name: Install new packages
   apt:
@@ -17,7 +18,3 @@
 - name: dist-upgrade Apt packages
   apt:
     upgrade: dist
-
-- name: Remove unneeded packages
-  apt:
-    autoremove: yes

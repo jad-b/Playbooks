@@ -17,6 +17,7 @@ apps:
   - unity-tweak-tool
   - vim
   - xclip
+  - ukuu
   # Python system libraries
   - libbz2-dev
   - libc6-dev
