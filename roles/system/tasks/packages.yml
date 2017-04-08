@@ -8,6 +8,9 @@
     - 'ppa:ubuntu-mozilla-daily/firefox-aurora'
     - 'ppa:teejee2008/ppa'
 
+- name: Open up new Apt source list permissions
+  shell: 'chmod og+r /etc/apt/sources.list.d/*.list'
+
 - name: Install new packages
   apt:
     name: "{{ item }}"
