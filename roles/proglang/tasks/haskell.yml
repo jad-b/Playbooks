@@ -1,5 +1,22 @@
 ---
-- name: Install Haskell
-  apt:
-    name: haskell-platform
+- name: Is Stack installed?
+  shell: "hash stack 2>/dev/null"
+  register: stack_installed
+  ignore_errors: True
+
+- name: Install Stack
+  shell: "curl -sSL https://get.haskellstack.org/ | sh"
   become: yes
+  when: stack_installed|failed
+
+- name: Symlink Stack config
+  file:
+    src: "{{ playbook_dir }}/roles/proglang/files/stack.config.yaml"
+    dest: "/home/{{ ansible_ssh_user|default(lookup('env', 'USER')) }}/.stack/config.yaml"
+    owner: "{{ ansible_ssh_user|default(lookup('env', 'USER')) }}"
+    group: "{{ ansible_ssh_user|default(lookup('env', 'USER')) }}"
+    state: link
+    force: yes
+
+- name: Install Glassgow-Haskell Compiler and friends
+  command: "stack setup"
