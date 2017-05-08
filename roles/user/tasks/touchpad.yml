@@ -1,0 +1,3 @@
+---
+- name: Setup palm detection
+  command: synclient PalmDetect=1

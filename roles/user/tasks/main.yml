@@ -1,7 +1,15 @@
 ---
-# - include: install_pip.yml
 - include: linkconf.yml
   tags: linkconf
 
 - include: vim.yml
   tags: vim
+
+- include: pip_installs.yml
+  tags: pip
+
+- include: solarized.yml
+  tags: solarized
+
+- include: touchpad.yml
+  tags: touchpad

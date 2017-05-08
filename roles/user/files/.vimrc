@@ -1,5 +1,4 @@
-set nocompatible              " be iMproved, required
-filetype off                  " required
+set nocompatible              " be iMproved, required filetype off                  " required
 set t_Co=256
 
 " set the runtime path to include Vundle and initialize
@@ -44,20 +43,20 @@ Plugin 'godlygeek/tabular'
 Plugin 'tmhedberg/SimpylFold'
 " Display tmux status bar
 Plugin 'edkolev/tmuxline.vim'
+Plugin 'tpope/vim-dispatch'
 
 " ~~~~~~~~~~~~~~ Language support ~~~~~~~~~~~~~~
-" Syntastic
-Plugin 'scrooloose/syntastic'
 Plugin 'fatih/vim-go' " Go support
-Plugin 'vim-scripts/nginx.vim' " Nginx conf highlighting
 Plugin 'chase/vim-ansible-yaml'
 Plugin 'tell-k/vim-autopep8' " Python - automatic pep8 fixes
 Plugin 'vim-scripts/indentpython.vim' " Python PEP8 Indenting
 Plugin 'hashivim/vim-hashicorp-tools' " HCL format
-Plugin 'JuliaEditorSupport/julia-vim' " Julia
+" Plugin 'JuliaEditorSupport/julia-vim' " Julia
 Plugin 'plasticboy/vim-markdown' " Markdown
 Plugin 'derekwyatt/vim-scala' " Scala
 "Plugin 'klen/python-mode' " Too much!
+Plugin 'rust-lang/rust.vim'
+Plugin 'w0rp/ale'
 
 " ~~~~~~~~~~~~~~ Front-end Development ~~~~~~~~~~~~~~
 " Close HTML/XML tags with ctrl-_
@@ -135,14 +134,20 @@ au FileType go nmap <Leader>gi <Plug>(go-info)
 " Rename the identifier under the cursor to a new name
 au FileType go nmap <Leader>e <Plug>(go-rename)
 " Enable goimports to automatically insert import paths instead of gofmt:
+
+" -------- linting --------
+"  ALE
+nmap <C-Up> <Plug>(ale_previous_wrap)
+nmap <C-Down> <Plug>(ale_next_wrap)
+let g:ale_set_quickfix = 1
+" ALE - Python
+let g:ale_python_pylint_executable = 'python3'   " or 'python' for Python 2
+let g:ale_python_pylint_options = '-rcfile ~/.pylintrc'
+let g:ale_python_flake8_executable = 'python3'
+let g:ale_python_flake8_options = '-m flake8'
+
+"  Syntastic
 let g:go_fmt_command = "goimports"
-let g:syntastic_javascript_checkers = ['jshint']
-" Comptability fixes for vim-go and Syntastic
-let g:syntastic_go_checkers = ['gometalinter']
-let g:syntastic_aggregate_errors = 1 " Run all checkers
-let g:syntastic_go_gometalinter_args = "--fast --disable=gas --disable=dupl --disable=gotype --disable=gocyclo"
-" let g:syntastic_mode_map = { 'mode': 'active', 'passive_filetypes': ['go'] }
-let g:go_list_type = "quickfix"
 " turn highlighting on
 let g:go_highlight_functions = 1
 let g:go_highlight_methods = 1

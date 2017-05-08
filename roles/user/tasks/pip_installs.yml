@@ -1,0 +1,13 @@
+---
+- name: Upgrade pip(s)
+  command: "{{ item }} install -U pip"
+  with_items:
+    - pip2
+    - pip3
+
+- name: Install user's pip packages
+  pip:
+    name: "{{ item }}"
+    executable: pip3
+    extra_args: "--user -U"
+  with_items: "{{ pip_packages }}"

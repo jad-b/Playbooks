@@ -4,6 +4,7 @@
 sudo apt-get install \
 	aptitude \
 	libssl-dev \
+        libffi-dev \
 	python-dev \
 	python-pip
 

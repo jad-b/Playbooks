@@ -1,0 +1,19 @@
+---
+- name: Download dircolors
+  get_url:
+    url: https://raw.github.com/seebi/dircolors-solarized/master/dircolors.ansi-dark
+    dest: ~/.dircolors
+
+- name:  Solarized for GNOME terminal
+  git:
+    repo: https://github.com/sigurdga/gnome-terminal-colors-solarized.git
+    dest: ~/gnome-terminal-colors-solarized
+
+# TODO(jdb) Can't get to work. Easy enough to run with the above file in  place.
+#- name: Set Dark Solarized
+  #expect:
+    #command: bash /home/jdb/gnome-terminal-colors-solarized/set_dark.sh
+    #responses:
+      #\?: 1
+      #(YES to continue): yes
+      #Enter your choice: 2

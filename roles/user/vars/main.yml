@@ -1,9 +1,10 @@
 ---
 pip_packages:
+  - flake8
   - git+https://github.com/ipython/ipython.git@master#egg=ipython
   - git-up
-  - pep8
-  - pyflakes
+  - pexpect
   - pylint
   - virtualenv
   - virtualenvwrapper
+  - yamllint
