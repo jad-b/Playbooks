@@ -1,6 +1,6 @@
 ---
 apps:
-  ### Packages affecting the OS and foundational functionality
+  # Packages affecting the OS and foundational functionality
   - build-essential
   - compiz-plugins
   - compizconfig-settings-manager
@@ -35,6 +35,7 @@ apps:
   - python3-dev
   - libncurses5-dev
   - libzmq-dev
+  - python3.6
   # Network Tools
   - iftop
   - netcat
