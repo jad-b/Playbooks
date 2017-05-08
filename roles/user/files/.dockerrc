@@ -1,0 +1,185 @@
+#!/bin/bash
+# vim: filetype=sh
+
+# export DOCKER_TLS_VERIFY=1
+
+# Docker aliases
+alias dals="egrep 'docker|dkr' ~/.dockerrc"
+alias denv="env | grep DOCKER"
+# Switch for extending docker with common apps
+d() {
+	case $1 in
+		ipython)
+			docker run --rm -it -v "$(pwd):/home/jovyan/work" \
+				--entrypoint ipython jupyter/scipy-notebook
+			;;
+		notebook)
+			docker run --rm -it -v "$(pwd):/home/jovyan/work" \
+				-p "127.0.0.1:8888:8888" \
+				jupyter/scipy-notebook
+			;;
+		chrome)
+			docker run -it \
+				--net host \
+				--cpuset-cpus 2-3 \
+				--memory 2gb \
+				-v /tmp/.X11-unix:/tmp/.X11-unix \
+				-e DISPLAY="$DISPLAY" \
+				-v "$HOME/Downloads":/root/Downloads \
+				-v "$HOME/.config/google-chrome/":/data \
+				--device /dev/snd \
+				--name chrome \
+				jess/chrome
+			;;
+		internet)
+			echo "Pinging google.com..."
+			docker run -it --rm ubuntu ping google.com -W 5 -c 3
+			;;
+		psql)
+			docker-compose -f ~/src/dockerfiles/postgres/docker-compose.yml run --rm psql
+			;;
+		aliases)
+			docker inspect -f "{{ json .NetworkSettings.Networks.$2.Aliases }}" "$3" | \
+				python -m json.tool
+			;;
+		upgrade)
+			case $2 in
+				machine)
+					# Grab latest docker-machine release
+					DM_VERSION=$(gh-latest docker/machine)
+					DM_VERSION=${DM_VERSION//\"} # Strip surrounding "..."
+					printf "Downloading docker-machine %s\n" "$DM_VERSION"
+					# upgrade docker-machine
+					curl -L "https://github.com/docker/machine/releases/download/$DM_VERSION/docker-machine-Linux-x86_64" > ~/.local/bin/docker-machine && \
+						chmod +x ~/.local/bin/docker-machine
+					;;
+				compose)
+					pip install -U docker-compose
+					;;
+				engine)
+				    sudo apt-get install --only-upgrade docker-engine
+					;;
+				*)
+					echo "Please specify compose|engine|machine"
+					;;
+			esac
+		;;
+		*) # Default to docker
+			docker "${@:1}"
+			;;
+	esac
+}
+alias dc='docker-compose'
+alias dcx='docker-compose --x-networking --x-network-driver overlay'
+alias dm='docker-machine'
+alias dip="docker inspect -f '{{.NetworkSettings.IPAddress}}'"
+dsize() { docker inspect -f '{{.VirtualSize}}' "$1" | numfmt --to=iec; }
+# Display ID of the last created container
+alias dlast='docker ps -l -q'
+# Delete all untagged/dangling(<none>) images
+alias drmdangle='docker rmi $(docker images -q -f "dangling=true")'
+# Remove all Exited containers
+alias drmextd='docker rm $(docker ps -f "status=exited" -q)'
+alias drmcreated='docker rm $(docker ps -f "status=created" -q)'
+alias dclean="drmdangle && rmextd"
+gh-latest() {
+	GITHUB_API=https://api.github.com
+	ORG_REPO="$1"
+	curl -s "$GITHUB_API/repos/$ORG_REPO/releases/latest" | jq '.name'
+}
+dlint(){
+	local where="$(readlink -f "${1:-$PWD}")"
+	if [ -d "$where" ]; then
+		# For each Dockerfile in directory, lint it
+		dockerfiles="$(find "$where" -name 'Dockerfile*' -type f)"
+		echo "Found $dockerfiles"
+		for df in $dockerfiles; do
+			echo "Linting $df"
+			docker run -it --rm -v "$df":/Dockerfile:ro redcoolbeans/dockerlint
+		done
+    else # We were given a file
+		echo "Linting $df"
+		docker run -it --rm -v "$where":/Dockerfile:ro redcoolbeans/dockerlint
+	fi
+}
+
+# Kill and force-remove a container
+drmf(){ docker kill "$1" && docker rm -f "$1"; }
+docker-reset() {
+    sudo systemctl stop docker
+    sudo iptables -t nat -F
+    sudo ifconfig docker0 down
+    sudo brctl delbr docker0
+    sudo systemctl start docker
+}
+# Setup variables for talking to remote Docker engine
+# Arguments
+#   1) Name of node
+#   2) Optional '-u' unset argument
+dmenv() {
+	printf "Setting '%s' as active\n" "$1"
+	MACHINE="$1"
+
+    if [[ $# -lt 1 ]];then
+		cat <<-EOF
+	Please supply a target node:
+	$(docker-machine ls)
+EOF
+	return 1
+	fi
+
+	if [ "$2" != "-u" ]; then   # Only accept a "-u"
+       UNSET=""
+	else
+	   UNSET="$2"
+	fi
+
+    eval "$(docker-machine env "$UNSET" "$MACHINE")"
+}
+# Remove node from docker-machine & AWS
+dm-cleanup() {
+    docker-machine rm -f "$1"
+    aws ec2 delete-key-pair --key-name "$1"
+}
+# Upload a docker image to a remote server
+# Args:
+#  1. Name of image
+#  2. Name of remote host
+dupload() {
+	docker save "$1" | gzip -c | docker "$(dm config "$2")" load
+}
+# Bootstrap a generic Swarm master via Docker Machine
+bootstrap() {
+	read -e -p "IP address of box: " IP_ADDR
+	read -e -p "SSH port of box: " SSH_PORT
+	read -e -p "Consul port: " CONSUL_PORT
+	CONSUL_PORT=${CONSUL_PORT:-8500}
+	read -e -p "Docker port to advertise via Consul: " ADVERTISE_PORT
+
+	cat << EOF
+docker-machine -D create -d generic
+	--generic-ip-address "$IP_ADDR"
+	--generic-ssh-key ~/.ssh/id_rsa
+	--generic-ssh-port "$SSH_PORT"
+	--generic-ssh-user jdb
+	--engine-opt "cluster-store=while-true-continue.com:$CONSUL_PORT"
+	--engine-opt "cluster-advertise=while-true-continue.com:$ADVERTISE_PORT"
+	--swarm
+	--swarm-master
+	--swarm-discovery consul://while-true-continue.com:8500
+-----------------------------------------------------------------------------
+EOF
+	local yes_no='y n'
+	local b=''
+	while ! [[ $yes_no =~ $b ]]; do
+		read -e -n 1 -p "Does this look right?" b
+	done
+	if [ "$b" == "y" ]; then
+		echo "Good."
+	else
+		echo "Aborting."
+		return 1
+	fi
+}
+# Test if an image exists
+dexist() { return test docker images -q "$1" 2> /dev/null != ""; }
