@@ -1,20 +1,31 @@
 ---
+- name: Grab Ubuntu distribution
+  command: lsb_release -cs
+  register: ubuntu_distro
+
+- name: Grab kernel version
+  command: uname -r
+  register: linux_kernel
+
+- name: Install linux kernel extras
+  apt:
+    name: "linux-image-extra-{{ linux_kernel.stdout }}"
+    update_cache: yes
+
 - name: Install Docker HTTPS Repo Pre-reqs
   apt:
     name: "{{ item }}"
+    update_cache: yes
   with_items:
     - apt-transport-https
     - ca-certificates
     - curl
     - software-properties-common
+    - linux-image-extra-virtual
 
 - name: Install Docker's GPG Key
   apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
-
-- name: Grab Ubuntu distribution
-  command: lsb_release -cs
-  register: ubuntu_distro
 
 - name: Add Apt repositories
   apt_repository:
@@ -27,8 +38,8 @@
     update_cache: yes
     state: latest
 
-- name: Add "{{ ansible_ssh_user }}" to docker group
+- name: Add user to docker group
   user:
     append: yes
     groups: docker
-    name: "{{ ansible_ssh_user }}"
+    name: "{{ ansible_ssh_user|default(lookup('env', 'USER')) }}"

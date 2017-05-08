@@ -1,11 +1,10 @@
 ---
-- name:  Add special Apt repos
+- name: Add special Apt repos
   apt_repository:
-    repo:  "{{ item }}"
+    repo: "{{ item }}"
     mode: 0664
   with_items:
     - 'ppa:jonathonf/vim'
-    - 'ppa:ubuntu-mozilla-daily/firefox-aurora'
     - 'ppa:teejee2008/ppa'
 
 - name: Open up new Apt source list permissions
@@ -17,6 +16,12 @@
     state: latest
     update_cache: yes
   with_items: "{{ apps }}"
+
+- name: Download and install debians
+  apt:
+    deb: "{{ item }}"
+  with_items:
+    - https://downloads.slack-edge.com/linux_releases/slack-desktop-2.5.2-amd64.deb
 
 - name: dist-upgrade Apt packages
   apt:

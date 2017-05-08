@@ -10,12 +10,13 @@ apps:
   - network-manager-openvpn-gnome
   - powertop
   - software-properties-common
+  - tlp
   - tmux
   - tree
   - ubuntu-developer-tools-center
   - ubuntu-restricted-extras
   - unity-tweak-tool
-  - vim
+  - vim-gnome
   - xclip
   - ukuu
   # Python system libraries
