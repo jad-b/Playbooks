@@ -5,3 +5,5 @@
   tags: julia
 - include: haskell.yml
   tags: haskell
+- include: node.yml
+  tags: node

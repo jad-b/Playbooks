@@ -18,5 +18,5 @@
     state: link
     force: yes
 
-- name: Install Glassgow-Haskell Compiler and friends
+- name: Install Glassgow-Haskell Compiler and Friends
   command: "stack setup"

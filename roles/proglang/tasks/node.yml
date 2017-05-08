@@ -1,0 +1,32 @@
+---
+# src=https://duckduckgo.com/?q=ubuntu+npm+without+sudo&t=canonical&atb=v62-4&search_plus_one=form&ia=qa
+- name: Create temp Node extraction directory
+  command: mkdir /tmp/node
+
+- name: Download Node (latest)
+  unarchive:
+    src: http://nodejs.org/dist/node-latest.tar.gz
+    extra_opts: ["--strip-components=1"]
+    dest: /tmp/node
+    remote_src: True
+
+- name: Configure & Install Node
+  shell: ./configure --prefix==~/.local && make install
+  args:
+    chdir: /tmp/node
+    executable: /bin/bash
+
+- name: Download npm
+  get_url:
+    url: https://www.npmjs.org/install.sh
+    dest: /tmp/npm_install.sh
+    mode: 0755
+
+- name: Install npm
+  command: /tmp/npm_install.sh
+
+- name: Install global npm packages
+  command: npm install -g "{{ item }}"
+  with_items:
+    - jsonlint
+    - gulp
