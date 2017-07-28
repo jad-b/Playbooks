@@ -1,9 +1,5 @@
 ---
 
-- include: dropbox.yml
-  tags: dropbox
-  become: yes
-
 - include: docker.yml
   tags: docker
   become: yes

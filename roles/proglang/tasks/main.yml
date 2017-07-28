@@ -1,6 +1,7 @@
 ---
-- include: rust.yml
-  tags: rust
+# Requires human interaction
+# - include: rust.yml
+# tags: rust
 - include: julia.yml
   tags: julia
 - include: haskell.yml

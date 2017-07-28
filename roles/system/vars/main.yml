@@ -4,6 +4,7 @@ apps:
   - build-essential
   - compiz-plugins
   - compizconfig-settings-manager
+  - fluxgui
   - git
   - htop
   - meld

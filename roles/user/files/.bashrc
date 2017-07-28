@@ -186,7 +186,7 @@ if ! shopt -oq posix; then
 fi
 
 export MYBIN="$HOME/.local/bin"
-export PATH="$MYBIN:$HOME/Dropbox/bin:$PATH"
+export PATH="$MYBIN:$PATH"
 
 # Python virtualenvwrapper
 export WORKON_HOME=~/.venv
@@ -213,9 +213,8 @@ export MANPATH="$NPM_PACKAGES/share/man:$(manpath)"
 export NODE_PATH="$NPM_PACKAGES/lib/node_modules:$NODE_PATH"
 
 # Golang
-export PATH="$PATH:/usr/local/go/bin"
+export PATH="/usr/local/go/bin:$PATH"
 export GOPATH="$HOME/go"
-export PATH="$PATH:$GOPATH/bin:/usr/local/bin"
 export GOMAXPROCS=$(nproc)
 
 # Haskell
@@ -228,16 +227,22 @@ JULIA_PRO="$HOME/julia/JuliaPro-0.5.1.1"
 if [ -d "$JULIA_PRO" ]; then
     export PATH="$PATH:$JULIA_PRO"
 fi
-JULIA_VERSION=0.5.1
-export PATH="$PATH:$HOME/julia/julia-${JULIA_VERSION}/bin"
+JULIA_VERSION=0.6
+export PATH="$HOME/julia/julia-${JULIA_VERSION}/bin:$PATH"
 
+# Rust
+export PATH="$HOME/.cargo/bin:$PATH"
+
+###############################################################################
+# CLI Completion Scripts
+###############################################################################
 pre_complete=$(now)
 # Array of files within .completions
 COMPLETIONS=(~/.completions/*)
 source_files=(
-			  ~/.dockerrc \
-              "$HOME/.local/bin/virtualenvwrapper.sh"
-              )
+    ~/.dynrc
+    ~/.dockerrc
+)
 
 # Source all our files
 for i in "${source_files[@]}" "${COMPLETIONS[@]}"; do
@@ -279,3 +284,13 @@ printf "Loaded .bashrc in %s\n" "$(time_since "$start")"
 
 # added by Miniconda3 4.0.5 installer
 # export PATH="/home/jdb/miniconda3/bin:$PATH"
+
+###############################################################################
+# Add binaries from .local
+###############################################################################
+if [ -d "$HOME/.local/opt" ]; then
+	for path in $HOME/.local/opt/**/bin; do
+		#echo "Adding $path to PATH"
+		export PATH="$PATH:$path"
+	done
+fi

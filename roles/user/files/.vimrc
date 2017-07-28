@@ -51,7 +51,7 @@ Plugin 'chase/vim-ansible-yaml'
 Plugin 'tell-k/vim-autopep8' " Python - automatic pep8 fixes
 Plugin 'vim-scripts/indentpython.vim' " Python PEP8 Indenting
 Plugin 'hashivim/vim-hashicorp-tools' " HCL format
-" Plugin 'JuliaEditorSupport/julia-vim' " Julia
+Plugin 'JuliaEditorSupport/julia-vim' " Julia
 Plugin 'plasticboy/vim-markdown' " Markdown
 Plugin 'derekwyatt/vim-scala' " Scala
 "Plugin 'klen/python-mode' " Too much!
@@ -65,7 +65,9 @@ Plugin 'hail2u/vim-css3-syntax'
 " JavaScript Syntax
 Plugin 'pangloss/vim-javascript'
 " TypeScript
-Plugin 'leafgarland/typescript-vim'
+" Plugin 'leafgarland/typescript-vim'
+Plugin 'HerringtonDarkholme/yats.vim'
+Plugin 'Quramy/tsuquyomi'
 
 
 " All of your Plugins must be added before the following line
@@ -75,12 +77,16 @@ call vundle#end()            " required
 " ------------------------------------------------------------------------------
 "  Plugin Configuration
 " ------------------------------------------------------------------------------
+" cltrp
+let g:ctrlp_custom_ignore = {
+  \ 'dir': '\v[\/]\node_modules$',
+  \ }
+
 let g:ansible_options = {'ignore_blank_lines': 0}
 
 " vim-airline
 " Enable the list of buffers
 let g:airline#extensions#tabline#enabled = 1
-
 " Show just the filename
 let g:airline#extensions#tabline#fnamemod = ':t'
 
@@ -341,6 +347,7 @@ autocmd BufRead,BufNewFile Vagrantfile* set filetype=ruby
 autocmd BufRead,BufNewFile *.md set filetype=markdown textwidth=80
 autocmd BufRead,BufNewFile Dockerfile.* set filetype=dockerfile
 autocmd BufNewFile,BufRead *.groovy  set filetype=groovy
+autocmd BufNewFile,BufRead *.jl  set filetype=julia
 
 " Turn on spell-checking in text files
 " au BufRead,BufNewFile *.md,*.txt,*.rst setlocal spell spelllang=en_us

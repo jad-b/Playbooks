@@ -18,6 +18,9 @@ start_agent () {
 	# Store SSH environment variables from ssh-agent
     /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
     echo succeeded
+    if [ ! -d ~/.ssh ]; then # Create ~/.ssh if missing
+        mkdir ~/.ssh
+    fi
     chmod 600 "${SSH_ENV}"  # Make readable
     . "${SSH_ENV}" > /dev/null  # Source env vars
     /usr/bin/ssh-add;  # Will prompt user for SSH key pasphrase
@@ -37,3 +40,7 @@ else
     start_agent;
 fi
 }
+
+source_ssh
+
+export PATH="$HOME/.cargo/bin:$PATH"

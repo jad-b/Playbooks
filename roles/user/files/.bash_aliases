@@ -29,8 +29,12 @@ detectGoPkg() {
 	fi
 }
 
-cd (){
+cd() {
 	builtin cd "$@"
+    if [ -n TMUX ]; then
+        path=${*%*/} # Remove trailing slash
+        tmux rename-window "${path##*/}" # Remove everything through last slash
+    fi
 	detectGoPkg
 }
 
@@ -322,11 +326,11 @@ treed(){
 	tree -d  "${@:2}" "${1:-.}"
 }
 
-alias install='sudo apt-get install -y'
-alias update='sudo apt-get update'
-alias upgrade='sudo apt-get upgrade -y'
+alias aptinstall='sudo apt-get install -y'
+alias aptupdate='sudo apt-get update'
+alias aptupgrade='sudo apt-get upgrade -y'
 alias upnup='sudo apt-get update; sudo apt-get dist-upgrade -y'
-cleanup () {
+cleanup (){
 	set -x
 	echo "Cleaning up"
 	sudo apt-get autoclean

@@ -37,3 +37,5 @@
     enabled = true
 [user]
     signingkey = 7C383024
+[url "git@github.com:"]
+	insteadOf = gh:

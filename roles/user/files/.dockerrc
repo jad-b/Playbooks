@@ -81,7 +81,7 @@ alias drmdangle='docker rmi $(docker images -q -f "dangling=true")'
 # Remove all Exited containers
 alias drmextd='docker rm $(docker ps -f "status=exited" -q)'
 alias drmcreated='docker rm $(docker ps -f "status=created" -q)'
-alias dclean="drmdangle && rmextd"
+alias dclean="drmdangle && drmextd"
 gh-latest() {
 	GITHUB_API=https://api.github.com
 	ORG_REPO="$1"
