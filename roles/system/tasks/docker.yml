@@ -42,4 +42,4 @@
   user:
     append: yes
     groups: docker
-    name: "{{ ansible_ssh_user|default(lookup('env', 'USER')) }}"
+    name: "{{ ansible_user }}"

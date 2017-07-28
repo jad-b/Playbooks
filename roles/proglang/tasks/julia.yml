@@ -17,3 +17,32 @@
     - ipywidgets
     - jupyter
     - matplotlib
+
+- name: Is Julia installed?
+  shell: julia -version | grep "{{ julia.version }}"
+  ignore_errors: True
+  register: julia_installed
+
+- name: Make Julia directory
+  file:
+    state: directory
+    path: "{{ julia.dir }}/{{ julia.version }}/"
+  when: julia_installed|failed
+
+- name: Download Julia
+  unarchive:
+    src: https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.0-linux-x86_64.tar.gz
+    dest: "{{ julia.dir }}/{{ julia.version }}/"
+    extra_opts:
+      - "--strip-components=1"
+    remote_src: True
+  when: julia_installed|failed
+
+- name: Symlink in Julia config
+  file:
+    src: "{{ playbook_dir }}/roles/proglang/files/.juliarc.jl"
+    dest: "/home/{{ ansible_user }}/.juliarc.jl"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    state: link
+    force: yes

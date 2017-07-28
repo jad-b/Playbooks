@@ -18,7 +18,7 @@ installing Docker. (needs `-K` as a CLI flag).
 `proglang` sets up various programming languages.
 
 ## Notes
-The default user is `ansible_ssh_user`, which should be the user who's running
+The default user is `ansible_user`, which should be the user who's running
 `ansible-playbooks` (or `run.sh`).
 
 ## TODO

@@ -1,17 +1,20 @@
 ---
+- name: Check Go version
+  shell: go version | grep "{{ go.version }}"
+  ignore_errors: True
+  register: go_installed
 
-- name: Check for godeb
-  command: type godeb
-  register: godeb_exists
+- name: Remove old version of Go
+  file:
+    state: absent
+    path: "{{ go.dir }}"
+  become: yes
+  when: go_installed|failed
 
-- name: Install godeb
-  command: sudo wget https://godeb.s3.amazonaws.com/godeb-amd64.tar.gz | tar -v -C ~/.local/bin -xz
-  when: godeb_exists|failed
-
-- name: Check if Go has been installed
-  command: go --version | grep {{go_version}}
-  register: go_version_installed
-
-- name: Download and install go
-  command: ~/.local/bin/godeb install {{go_version}}
-  when: go_version_installed|failed
+- name: Download Go
+  unarchive:
+    src: "https://storage.googleapis.com/golang/go{{ go.version }}.linux-amd64.tar.gz"
+    dest: /usr/local/
+    remote_src: True
+  become: yes
+  when: go_installed|failed

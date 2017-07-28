@@ -1,7 +1,9 @@
 ---
 # src=https://duckduckgo.com/?q=ubuntu+npm+without+sudo&t=canonical&atb=v62-4&search_plus_one=form&ia=qa
 - name: Create temp Node extraction directory
-  command: mkdir /tmp/node
+  file:
+    state: directory
+    path: /tmp/node
 
 - name: Download Node (latest)
   unarchive:

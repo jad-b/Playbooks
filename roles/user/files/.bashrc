@@ -227,8 +227,8 @@ JULIA_PRO="$HOME/julia/JuliaPro-0.5.1.1"
 if [ -d "$JULIA_PRO" ]; then
     export PATH="$PATH:$JULIA_PRO"
 fi
-JULIA_VERSION=0.6
-export PATH="$HOME/julia/julia-${JULIA_VERSION}/bin:$PATH"
+JULIA_VERSION=0.6.0
+export PATH="$HOME/julia/${JULIA_VERSION}/bin:$PATH"
 
 # Rust
 export PATH="$HOME/.cargo/bin:$PATH"
