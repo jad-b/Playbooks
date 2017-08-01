@@ -8,9 +8,13 @@
     - 'ppa:jonathonf/python-3.6'
     - 'ppa:teejee2008/ppa'
     - 'ppa:nathan-renniewaldock/flux'
+    - 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main'
 
-- name: Open up new Apt source list permissions
-  shell: 'chmod og+r /etc/apt/sources.list.d/*.list'
+- name: Install Apt signing keys
+  apt_key:
+    url: "{{ item }}"
+  items:
+    - https://dl.google.com/linux/linux_signing_key.pub
 
 - name: Install new packages
   apt:

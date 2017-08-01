@@ -6,6 +6,7 @@ apps:
   - compizconfig-settings-manager
   - fluxgui
   - git
+  - google-chrome-stable
   - htop
   - meld
   - network-manager-openvpn-gnome
