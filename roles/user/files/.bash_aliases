@@ -11,6 +11,7 @@ alias rebash='. ~/.bashrc'
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
+alias sctl=`systemctl`
 
 # *Always* ignore some directories
 alias rgrep='rgrep --exclude-dir=.git --exclude-dir=.berkshelf --exclude-dir=Godeps --exclude-dir=.kitchen'
@@ -33,7 +34,7 @@ cd() {
 	builtin cd "$@"
     if [ -n TMUX ]; then
         path=${*%*/} # Remove trailing slash
-        tmux rename-window "${path##*/}" # Remove everything through last slash
+        #tmux rename-window "${path##*/}" # Remove everything through last slash
     fi
 	detectGoPkg
 }
@@ -42,6 +43,11 @@ joinString() {
 	local IFS="$1"
 	shift
 	printf "%s" "$*"
+}
+
+# Grep within specific files.
+findgrep() {
+    find . -name "$1" -exec grep -H "$2" {} \;
 }
 
 
@@ -75,6 +81,21 @@ map(){
 	for h in $hosts; do
 		printf "%s\n\t %s\n" "$h" "$(eval  "$cmd $h")"
 	done
+}
+
+###############################################################################
+                                # Networking #
+###############################################################################
+# Print the (hostname,ens3 IPv4 address) tuple for the given interface.
+inet_addrs() {
+    local IFACE=$1
+    local HOST=$2
+    ssh -T $HOST <<-EOH
+    /usr/sbin/ip addr show $IFACE | \
+        grep 'inet\b' | \
+        awk '{print \$2}' | \
+        cut -d/ -f1
+EOH
 }
 
 wifictl (){
@@ -205,19 +226,23 @@ work() {
     # Where your code|projects live
     local DEV_DIRS=(
 		"$HOME/src/"
-		"$GOPATH/src/"
 		"$(pwd)"
+        "$HOME"
 	)
     # Change to the first matching directory
 	# shellcheck disable=SC2086
-    local WORK_DIR="$(find "${DEV_DIRS[@]}" -maxdepth 3 -name $PROJECT | sort | head -n 1)"
+    local WORK_DIR="$(
+        find "${DEV_DIRS[@]}" -maxdepth 3 -name $PROJECT 2>/dev/null \
+            | sort \
+            | head -n 1
+    )"
 	if [[ -z ${WORK_DIR// } ]]; then
 		echo "$PROJECT not found"
 		return 1
 	fi
     echo "Changing to $WORK_DIR"
     cd "$WORK_DIR"
-	tmux rename-window "$PROJECT"
+	# tmux rename-window "$PROJECT"
 }
 
 ###############################################################################
@@ -424,6 +449,7 @@ alias gals="grep git ~/.bash_aliases"
 alias gb='git branch'
 alias gbv='git branch -vv'
 alias gc='git checkout'
+alias gcb='git checkout -t origin/master -b'
 alias gcl='git clone'
 alias gd='git diff'
 alias gdc='git diff --cached'
@@ -454,8 +480,15 @@ gign() {
 
 # Removes old branches that have been merged into master
 alias sweep="git branch --merged master | egrep -v '^\s+master$' | xargs -n 1 git branch -d"
-export JADB=${HOME}/go/src/github.com/jad-b
-
+# Upgrade every Git repo under a directory name using 'git-up'
+gitemup() {
+    printf "Updating git repos in %s..." "$1"
+    for repo in $1/*/; do
+        ( cd $repo && git up 2>/dev/null &) 1>/dev/null
+    done
+    wait
+    echo "Done."
+}
 # Terraform
 alias tf='terraform'
 

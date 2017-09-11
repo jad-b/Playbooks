@@ -1,46 +1,76 @@
 #!/bin/bash
+export EDITOR=vim
+
 . ~/.bashrc
 
-# Configuration for pyenv
-# export PATH="$HOME/.pyenv/bin:$PATH"
-# eval "$(pyenv init -)"
-# eval "$(pyenv virtualenv-init -)"
-if [ -f "$HOME/Documents/.dynrc" ]; then
-	. "$HOME/Documents/.dynrc"
-	echo "Sourced .dynrc"
+# Local binaries
+if [ -d ~/.local/bin ]; then
+    export PATH="~/.local/bin:$PATH"
 fi
 
-
-SSH_ENV="$HOME/.ssh/environment"
-
-start_agent () {
-    echo -n "Initialising new SSH agent..."
-	# Store SSH environment variables from ssh-agent
-    /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
-    echo succeeded
-    if [ ! -d ~/.ssh ]; then # Create ~/.ssh if missing
-        mkdir ~/.ssh
-    fi
-    chmod 600 "${SSH_ENV}"  # Make readable
-    . "${SSH_ENV}" > /dev/null  # Source env vars
-    /usr/bin/ssh-add;  # Will prompt user for SSH key pasphrase
-}
-
-# Source SSH settings, if applicable
-source_ssh () {
-if [ -f "${SSH_ENV}" ]; then  # If environment file is found
-    . "${SSH_ENV}" > /dev/null  # Source it.
-	# Check if ssh-agent is running
-    if ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null; then
-		echo "SSH agent is already running"
-	else
-        start_agent;
-    fi
-else
-    start_agent;
+if [ -d "$HOME/.local/opt" ]; then
+	for path in $HOME/.local/opt/**/bin; do
+		#echo "Adding $path to PATH"
+		export PATH="$PATH:$path"
+	done
 fi
-}
 
-source_ssh
+# Rust
+if hash cargo 2>/dev/null; then
+    export PATH="$HOME/.cargo/bin:$PATH"
+fi
 
-export PATH="$HOME/.cargo/bin:$PATH"
+# Python virtualenvwrapper
+if hash virtualenv 2>/dev/null; then
+    export WORKON_HOME=~/.venv
+    export PROJECT_HOME=~/dev
+fi
+export PYTHONDONTWRITEBYTECODE=true
+
+# Pyenv
+if hash pyenv 2>/dev/null; then
+    export PYENV_ROOT="$HOME/.pyenv"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    if [ -d "$PYENV_ROOT" ]; then
+        eval "$(pyenv init -)"
+    fi
+    if [ -d "$PYENV_ROOT/plugins/pyenv-virtualenv" ]; then
+        eval "$(pyenv virtualenv-init -)"
+    fi
+fi
+
+# Node & NPM
+if hash npm 2>/dev/null; then
+    NPM_PACKAGES="$HOME/.local/npm-packages"
+    export PATH="$NPM_PACKAGES/bin:$PATH"
+    unset MANPATH
+    export MANPATH="$NPM_PACKAGES/share/man:$(manpath)"
+    export NODE_PATH="$NPM_PACKAGES/lib/node_modules:$NODE_PATH"
+fi
+
+# Golang
+if [ -d /usr/local/go ]; then
+    export PATH="/usr/local/go/bin:$PATH"
+    export GOPATH="$HOME/src"
+    export GOMAXPROCS=$(nproc)
+fi
+
+# Haskell
+if hash stack 2>/dev/null; then
+	eval "$(stack --bash-completion-script stack)"
+fi
+
+# Julia
+if [ -d "$JULIA_PRO" ]; then
+    JULIA_PRO="$HOME/julia/JuliaPro-0.5.1.1"
+    export PATH="$PATH:$JULIA_PRO"
+fi
+if hash julia 2>/dev/null; then
+    JULIA_VERSION=0.6.0
+    export PATH="$HOME/julia/${JULIA_VERSION}/bin:$PATH"
+fi
+
+# Chef
+if hash chef 2>/dev/null; then
+    eval "$(chef shell-init bash)"
+fi

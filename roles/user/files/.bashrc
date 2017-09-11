@@ -34,8 +34,6 @@ case $- in
       *) return;;
 esac
 
-export EDITOR=vim
-
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
 HISTCONTROL=ignoreboth
@@ -185,54 +183,6 @@ if ! shopt -oq posix; then
   fi
 fi
 
-export MYBIN="$HOME/.local/bin"
-export PATH="$MYBIN:$PATH"
-
-# Python virtualenvwrapper
-export WORKON_HOME=~/.venv
-export PROJECT_HOME=~/dev
-export PYTHONDONTWRITEBYTECODE=true
-
-# Pyenv
-if hash pyenv 2>/dev/null; then
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
-    if [ -d "$PYENV_ROOT" ]; then
-        eval "$(pyenv init -)"
-    fi
-    if [ -d "$PYENV_ROOT/plugins/pyenv-virtualenv" ]; then
-        eval "$(pyenv virtualenv-init -)"
-    fi
-fi
-
-# Node & NPM
-NPM_PACKAGES="$HOME/.local/npm-packages"
-export PATH="$NPM_PACKAGES/bin:$PATH"
-unset MANPATH
-export MANPATH="$NPM_PACKAGES/share/man:$(manpath)"
-export NODE_PATH="$NPM_PACKAGES/lib/node_modules:$NODE_PATH"
-
-# Golang
-export PATH="/usr/local/go/bin:$PATH"
-export GOPATH="$HOME/go"
-export GOMAXPROCS=$(nproc)
-
-# Haskell
-if hash stack 2>/dev/null; then
-	eval "$(stack --bash-completion-script stack)"
-fi
-
-# Julia
-JULIA_PRO="$HOME/julia/JuliaPro-0.5.1.1"
-if [ -d "$JULIA_PRO" ]; then
-    export PATH="$PATH:$JULIA_PRO"
-fi
-JULIA_VERSION=0.6.0
-export PATH="$HOME/julia/${JULIA_VERSION}/bin:$PATH"
-
-# Rust
-export PATH="$HOME/.cargo/bin:$PATH"
-
 ###############################################################################
 # CLI Completion Scripts
 ###############################################################################
@@ -282,15 +232,38 @@ fi
 
 printf "Loaded .bashrc in %s\n" "$(time_since "$start")"
 
-# added by Miniconda3 4.0.5 installer
-# export PATH="/home/jdb/miniconda3/bin:$PATH"
-
 ###############################################################################
 # Add binaries from .local
 ###############################################################################
-if [ -d "$HOME/.local/opt" ]; then
-	for path in $HOME/.local/opt/**/bin; do
-		#echo "Adding $path to PATH"
-		export PATH="$PATH:$path"
-	done
-fi
+
+SSH_ENV="$HOME/.ssh/environment"
+
+start_agent () {
+    echo -n "Initialising new SSH agent..."
+	# Store SSH environment variables from ssh-agent
+    /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
+    echo succeeded
+    if [ ! -d ~/.ssh ]; then # Create ~/.ssh if missing
+        mkdir ~/.ssh
+    fi
+    chmod 600 "${SSH_ENV}"  # Make readable
+    . "${SSH_ENV}" > /dev/null  # Source env vars
+    /usr/bin/ssh-add;  # Will prompt user for SSH key pasphrase
+}
+
+# Source SSH settings, if applicable
+source_ssh () {
+    if [ -f "${SSH_ENV}" ]; then  # If environment file is found
+        . "${SSH_ENV}" > /dev/null  # Source it.
+        # Check if ssh-agent is running
+        if ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null; then
+            echo "SSH agent is already running"
+        else
+            start_agent;
+        fi
+    else
+        start_agent;
+    fi
+}
+
+source_ssh
