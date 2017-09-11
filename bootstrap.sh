@@ -6,11 +6,11 @@ sudo apt-get install -y \
 	libssl-dev \
         libffi-dev \
 	python-dev \
-	python-pip
+	python3-pip
 
 # Install ansible
-pip install -U pip
-pip install --user -U ansible
+pip3 install -U pip
+pip3 install --user -U ansible
 
 # Run the ansible playbooks
 ./run.sh -K "$@"
