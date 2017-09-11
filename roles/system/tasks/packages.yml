@@ -9,12 +9,17 @@
     - 'ppa:teejee2008/ppa'
     - 'ppa:nathan-renniewaldock/flux'
     - 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main'
+    - 'deb http://eddie.website/repository/apt stable main'
 
 - name: Install Apt signing keys
   apt_key:
     url: "{{ item }}"
   items:
     - https://dl.google.com/linux/linux_signing_key.pub
+    - https://eddie.website/repository/keys/eddie_maintainer_gpg.key
+
+- include: insync.yml
+  tags: insync
 
 - name: Install new packages
   apt:

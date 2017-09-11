@@ -1,6 +1,7 @@
 ---
 apps:
   # Packages affecting the OS and foundational functionality
+  - airvpn
   - build-essential
   - compiz-plugins
   - compizconfig-settings-manager
@@ -8,10 +9,12 @@ apps:
   - git
   - google-chrome-stable
   - htop
+  - jq
   - meld
   - network-manager-openvpn-gnome
   - powertop
   - software-properties-common
+  - texlive-full
   - tlp
   - tmux
   - tree
