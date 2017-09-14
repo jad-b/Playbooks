@@ -13,21 +13,6 @@ set -P
 #	fi
 #fi
 
-now() {
-	date +%s%N
-}
-# Capture beginning of run time
-start="$(now)"
-
-time_since(){
-	diff="$(($(date +%s%N)-$1))"
-	# Drop nanoseconds through milliseconds (/10**9)
-	seconds=$((diff/10**9))
-	# Drop us to ns (/10**6), then truncate above ms (%10**3)
-	ms=$((diff/10**6%10**3))
-	printf "%d.%.3d seconds\n" ${seconds} ${ms}
-}
-
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
@@ -166,12 +151,6 @@ fi
 # ~/.bash_aliases, instead of adding them here directly.
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
-pre_aliases=$(now)
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
-printf "Loaded .bash_aliases in %s\n" "$(time_since "$pre_aliases")"
-
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
@@ -229,8 +208,6 @@ umask 027
 if [ -e ~/.secrets ]; then
 	source ~/.secrets
 fi
-
-printf "Loaded .bashrc in %s\n" "$(time_since "$start")"
 
 ###############################################################################
 # Add binaries from .local
