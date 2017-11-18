@@ -1,0 +1,8 @@
+---
+- name: Download Linux installer
+  get_url:
+    url: https://download.calibre-ebook.com/linux-installer.py
+    dest: /tmp/calibre-installer.py
+
+- name: Execute installer
+  command: python -c "exec(open('{{ calibre.dl_dest }}').read()); main('{{ calibre.install_dest }}''', True)"

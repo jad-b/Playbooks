@@ -1,15 +1,21 @@
 ---
-- include: linkconf.yml
+- import_tasks: linkconf.yml
   tags: linkconf
 
-- include: vim.yml
+- import_tasks: vim.yml
   tags: vim
 
-- include: pip_installs.yml
+- import_tasks: pip_installs.yml
   tags: pip
 
-- include: solarized.yml
+- import_tasks: solarized.yml
   tags: solarized
 
-- include: touchpad.yml
+- import_tasks: touchpad.yml
   tags: touchpad
+
+- import_tasks: cron.yml
+  tags: cron
+
+- import_tasks: calibre.yml
+  tags: calibre,books
