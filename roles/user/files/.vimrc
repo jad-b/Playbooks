@@ -1,6 +1,7 @@
 set nocompatible              " be iMproved, required filetype off                  " required
 set t_Co=256
 
+set ff=unix
 " set the runtime path to include Vundle and initialize
 set runtimepath+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
@@ -32,13 +33,11 @@ Plugin 'bling/vim-bufferline'
 " Tagbar
 Plugin 'majutsushi/tagbar'
 " Fuzzy search for files
-Plugin 'kien/ctrlp.vim'
+Plugin 'ctrlpvim/ctrlp.vim'
 " Commands for working with surrounding text objects
 Plugin 'tpope/vim-surround'
 " Quick (un)comment commands
 Plugin 'scrooloose/nerdcommenter'
-" Quickly align text
-Plugin 'godlygeek/tabular'
 " Smarter code folding
 Plugin 'tmhedberg/SimpylFold'
 " Display tmux status bar
@@ -52,7 +51,9 @@ Plugin 'tell-k/vim-autopep8' " Python - automatic pep8 fixes
 Plugin 'vim-scripts/indentpython.vim' " Python PEP8 Indenting
 Plugin 'hashivim/vim-hashicorp-tools' " HCL format
 Plugin 'JuliaEditorSupport/julia-vim' " Julia
+Plugin 'godlygeek/tabular' " Quickly align text
 Plugin 'plasticboy/vim-markdown' " Markdown
+Plugin 'cespare/vim-toml' " TOML
 Plugin 'derekwyatt/vim-scala' " Scala
 "Plugin 'klen/python-mode' " Too much!
 Plugin 'rust-lang/rust.vim'
@@ -337,14 +338,14 @@ fun! <SID>StripTrailingWhitespaces()
 endfun
 autocmd BufWritePre * :call <SID>StripTrailingWhitespaces()
 
- autocmd Filetype yaml,html,ruby,kivy,tmpl,css,hbs,scss setlocal autoindent tabstop=2 shiftwidth=2 expandtab
+autocmd Filetype yaml,html,ruby,kivy,tmpl,css,hbs,scss setlocal autoindent tabstop=2 shiftwidth=2 expandtab
 autocmd BufRead,BufNewFile *.ts set filetype=typescript
 autocmd BufRead,BufNewFile *.conf set filetype=conf
 autocmd BufRead,BufNewFile *.scss set filetype=css
 autocmd BufRead,BufNewFile *.deploy set filetype=yaml
 autocmd BufRead,BufNewFile *.yml set filetype=yaml
 autocmd BufRead,BufNewFile Vagrantfile* set filetype=ruby
-autocmd BufRead,BufNewFile *.md set filetype=markdown textwidth=80
+autocmd BufRead,BufNewFile *.txt,*.md set filetype=markdown textwidth=80
 autocmd BufRead,BufNewFile Dockerfile.* set filetype=dockerfile
 autocmd BufNewFile,BufRead *.groovy  set filetype=groovy
 autocmd BufNewFile,BufRead *.jl  set filetype=julia

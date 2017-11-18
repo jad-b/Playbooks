@@ -1,27 +1,15 @@
 ---
-- name: Grab Ubuntu distribution
-  command: lsb_release -cs
-  register: ubuntu_distro
-
-- name: Grab kernel version
-  command: uname -r
-  register: linux_kernel
-
-- name: Install linux kernel extras
-  apt:
-    name: "linux-image-extra-{{ linux_kernel.stdout }}"
-    update_cache: yes
-
 - name: Install Docker HTTPS Repo Pre-reqs
   apt:
     name: "{{ item }}"
     update_cache: yes
   with_items:
+    - "linux-image-extra-{{ ansible_kernel }}"
+    - linux-image-extra-virtual
     - apt-transport-https
     - ca-certificates
     - curl
     - software-properties-common
-    - linux-image-extra-virtual
 
 - name: Install Docker's GPG Key
   apt_key:
@@ -29,7 +17,7 @@
 
 - name: Add Apt repositories
   apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ubuntu_distro.stdout }} stable"
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
     mode: 0664
 
 - name: Install Docker

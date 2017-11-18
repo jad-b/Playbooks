@@ -7,12 +7,15 @@ apps:
   - compizconfig-settings-manager
   - fluxgui
   - git
+  - fbreader
   - google-chrome-stable
+  - handbrake-gtk
   - htop
   - jq
   - meld
   - network-manager-openvpn-gnome
   - powertop
+  - resilio-sync
   - software-properties-common
   - texlive-full
   - tlp

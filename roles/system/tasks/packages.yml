@@ -8,8 +8,10 @@
     - 'ppa:jonathonf/python-3.6'
     - 'ppa:teejee2008/ppa'
     - 'ppa:nathan-renniewaldock/flux'
+    - 'ppa:stebbins/handbrake-releases'
     - 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main'
     - 'deb http://eddie.website/repository/apt stable main'
+    - 'deb http://linux-packages.resilio.com/resilio-sync/deb resilio-sync non-free'
 
 - name: Install Apt signing keys
   apt_key:
@@ -17,6 +19,7 @@
   items:
     - https://dl.google.com/linux/linux_signing_key.pub
     - https://eddie.website/repository/keys/eddie_maintainer_gpg.key
+    - https://linux-packages.resilio.com/resilio-sync/key.asc
 
 - include: insync.yml
   tags: insync

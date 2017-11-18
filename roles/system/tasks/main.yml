@@ -1,9 +1,5 @@
 ---
 
-- include: docker.yml
-  tags: docker
-  become: yes
-
 - include: packages.yml
   tags: packages
   become: yes

@@ -15,6 +15,18 @@ time_since(){
 	printf "%d.%.3d seconds\n" ${seconds} ${ms}
 }
 
+print_pending() {
+    # Display our tasks for the day.
+    WAITING_FOR=~/Dropbox/Waiting-For.txt
+    if hash pending 2>/dev/null && [[ -f "$WAITING_FOR" ]]; then
+        pending "$WAITING_FOR" 2>/dev/null
+    fi
+}
+# mkfifo tasks
+print_pending
+pending_pid=$!
+# echo "print_pending job has pid of $pending_pid"
+
 # Baseline my PATH
 BASEPATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/snap/bin"
 reset_path(){
@@ -102,3 +114,6 @@ fi
 if [ -d ~/.cargo ]; then
     export PATH="$HOME/.cargo/bin:$PATH"
 fi
+
+# wait "$pending_pid"
+# cat tasks

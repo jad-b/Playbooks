@@ -52,6 +52,9 @@ fi
 # Disable scroll lock
 stty -ixon
 
+# Build an array of file fames
+src_dirs=(~/src/*)
+export CDPATH=".:~/:/..:../.." # :$(echo ${src_dirs[*]// /:})"
 
 ### Prompt coloring ###
 export TERM=xterm-256color
@@ -192,7 +195,7 @@ if [ -e "$GCLOUD_SDK" ]; then
 	source "$GLOUC_SDK/completion.bash.inc"
 fi
 
-printf "Sourced completions in %s\n" "$(time_since "$pre_complete")"
+# printf "Sourced completions in %s\n" "$(time_since "$pre_complete")"
 
 # Kubernetes
 if hash kubectl 2>/dev/null; then
@@ -234,7 +237,8 @@ source_ssh () {
         . "${SSH_ENV}" > /dev/null  # Source it.
         # Check if ssh-agent is running
         if ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null; then
-            echo "SSH agent is already running"
+            # echo "SSH agent is already running"
+            true
         else
             start_agent;
         fi

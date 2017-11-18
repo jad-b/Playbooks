@@ -5,14 +5,17 @@ alias rals='. ~/.bash_aliases'
 alias rebash='. ~/.bash_profile'
 
 # System aliases
-# some more ls aliases
-alias ll='ls -alF'
+alias ll='ls -alFhtA'
 alias la='ls -A'
 alias l='ls -CF'
-alias sctl=`systemctl`
 
-# *Always* ignore some directories
-alias rgrep='rgrep --exclude-dir=.git --exclude-dir=.berkshelf --exclude-dir=Godeps --exclude-dir=.kitchen'
+# ipv4 address for $1
+ipv4addr() {
+    ip -4 addr show dev "$1" | sed -n 's/^ *inet *\([.0-9]\+\).*/\1/p'
+}
+
+# Errors from this boot
+# journalctl -k -b -p err
 
 # Usage: cat file.txt | xclipd
 alias xclipd='xclip -selection clipboard'
@@ -397,6 +400,7 @@ snr() {
 ###############################################################################
 # Python
 ###############################################################################
+alias py3='python3'
 # Expand Python file trees, w/o showing stupid .pyc files
 alias pytree='tree -I *.pyc --prune .'
 # Pip
@@ -534,6 +538,22 @@ gpgctl() {
 	esac
 }
 
+# Tar and gpg-encrypt a file
+targpg() {
+    tar czf $1.tgz --remove-files $1
+    gpg --encrypt --armor -r $EMAIL -o $1.tgz.gpg $1.tgz
+}
+
+# Untar and decrypt a file
+untargpg() {
+    gpg -d $1 | tar zxf -
+    if [ $? -eq 0 ]; then
+        rm $1
+    else
+        echo "Failed to decrypt/extract $1"
+    fi
+}
+
 
 
 ###############################################################################
@@ -552,7 +572,7 @@ tls() {
 			openssl pkcs7 -print_certs -text -noout
 			;;
         server) # Open a TLS connection to a live server; $2 should be 'host:port'
-            openssl s_client -connect "$2" -showcerts -servername "${2%:*}"
+            openssl s_client -connect "$2" -showcerts -servername "${3:-443}"
             ;;
 		compare) # Check a public cert and private key for compatibility
 			openssl x509 -noout -modulus -in "$2" | openssl md5;\
@@ -578,6 +598,8 @@ tls() {
     esac
 }
 
+pre_auto_complete=$(now)
+# printf "Before alias completions %s\n" "$(time_since "$pre_auto_complete")"
 # Automatically add completion for all aliases to commands having completion functions
 function alias_completion {
     local namespace="alias_completion"
@@ -645,4 +667,5 @@ function alias_completion {
         echo "$new_completion" >> "$tmp_file"
     done < <(alias -p | sed -Ene "s/$alias_regex/\1 '\2' '\3'/p")
     source "$tmp_file" && rm -f "$tmp_file"
-}; alias_completion
+}; # alias_completion
+printf "Loaded alias completions in %s\n" "$(time_since "$pre_auto_complete")"

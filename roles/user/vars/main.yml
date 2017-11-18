@@ -1,10 +1,14 @@
 ---
 pip_packages:
   - flake8
-  - git+https://github.com/ipython/ipython.git@master#egg=ipython
+  - ipython
   - git-up
   - pexpect
   - pylint
   - virtualenv
   - virtualenvwrapper
   - yamllint
+
+calibre:
+  dl_dest: /tmp/calibre-installer.py
+  install_dest: "/home/{{ ansible_user }}/.local/calibre"
