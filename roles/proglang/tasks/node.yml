@@ -13,7 +13,7 @@
     remote_src: True
 
 - name: Configure & Install Node
-  shell: ./configure --prefix==~/.local && make install
+  shell: ./configure --prefix=~/.local && make install
   args:
     chdir: /tmp/node
     executable: /bin/bash
