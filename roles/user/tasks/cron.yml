@@ -1,6 +1,6 @@
 ---
 - name: Weekly re-install
   cron:
-    name: "Backup Anki to Dropbox"
+    name: "Backup Anki"
     special_time: hourly
-    job: "rsync -av --delete ~/Documents/Anki/jdb/backups/ ~/Dropbox/Backups/AnkiBackups/"
+    job: "rsync -av --delete ~/Documents/Anki/jdb/backups/ ~/Sync/Backups/AnkiBackups/"
