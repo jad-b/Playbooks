@@ -9,14 +9,23 @@
   become: yes
   when: stack_installed|failed
 
+- name: Install Glassgow-Haskell Compiler and Friends
+  command: "stack setup"
+
 - name: Symlink Stack config
   file:
     src: "{{ playbook_dir }}/roles/proglang/files/stack.config.yaml"
-    dest: "/home/{{ ansible_user }}/.stack.config.yaml"
+    dest: "/home/{{ ansible_user }}/.stack/config.yaml"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     state: link
     force: yes
 
-- name: Install Glassgow-Haskell Compiler and Friends
-  command: "stack setup"
+- name: Symlink .ghci
+  file:
+    src: "{{ playbook_dir }}/roles/proglang/files/.ghci"
+    dest: "/home/{{ ansible_user }}/.ghci"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    state: link
+    force: yes
