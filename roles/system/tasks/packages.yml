@@ -7,11 +7,11 @@
     - 'ppa:jonathonf/vim'
     - 'ppa:jonathonf/python-3.6'
     - 'ppa:teejee2008/ppa'
-    - 'ppa:nathan-renniewaldock/flux'
     - 'ppa:stebbins/handbrake-releases'
     - 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main'
     - 'deb http://eddie.website/repository/apt stable main'
-    - 'deb http://linux-packages.resilio.com/resilio-sync/deb resilio-sync non-free'
+    - 'deb https://apt.syncthing.net/ syncthing stable'
+    - 'ppa:nilarimogard/webupd8'
 
 - name: Install Apt signing keys
   apt_key:
@@ -19,10 +19,10 @@
   items:
     - https://dl.google.com/linux/linux_signing_key.pub
     - https://eddie.website/repository/keys/eddie_maintainer_gpg.key
-    - https://linux-packages.resilio.com/resilio-sync/key.asc
+    - https://syncthing.net/release-key.txt
 
-- include: insync.yml
-  tags: insync
+      # - import_tasks: insync.yml
+      #   tags: insync
 
 - name: Install new packages
   apt:

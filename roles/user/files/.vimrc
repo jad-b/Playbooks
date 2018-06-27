@@ -57,6 +57,7 @@ Plugin 'cespare/vim-toml' " TOML
 Plugin 'derekwyatt/vim-scala' " Scala
 "Plugin 'klen/python-mode' " Too much!
 Plugin 'rust-lang/rust.vim'
+Plugin 'lukerandall/haskellmode-vim'
 Plugin 'w0rp/ale'
 
 " ~~~~~~~~~~~~~~ Front-end Development ~~~~~~~~~~~~~~
@@ -75,6 +76,15 @@ Plugin 'Quramy/tsuquyomi'
 call vundle#end()            " required
 
 
+if has("multi_byte")
+  if &termencoding == ""
+    let &termencoding = &encoding
+  endif
+  set encoding=utf-8
+  setglobal fileencoding=utf-8
+  "setglobal bomb
+  set fileencodings=ucs-bom,utf-8,latin1
+endif
 " ------------------------------------------------------------------------------
 "  Plugin Configuration
 " ------------------------------------------------------------------------------
@@ -200,6 +210,10 @@ let g:vim_markdown_math = 1
 let g:vim_markdown_toml_frontmatter = 1
 " Auto-indent lists by 2 spaces
 let g:vim_markdown_new_list_item_indent = 2
+" Follow markdown links with the '.md' extension
+let g:vim_markdown_no_extensions_in_markdown = 1
+" Auto-save current file before following link
+let g:vim_markdown_autowrite = 1
 
 " Syntastic
 set statusline+=%#warningmsg#
@@ -226,6 +240,8 @@ filetype plugin indent on
 " filetype indent on
 syntax on
 set omnifunc=syntaxcomplete#Complete
+" Converts italicized,bold,etc. into the actual appearance.
+set conceallevel=2
 
 " Solarized
 syntax enable
@@ -338,20 +354,20 @@ fun! <SID>StripTrailingWhitespaces()
 endfun
 autocmd BufWritePre * :call <SID>StripTrailingWhitespaces()
 
-autocmd Filetype yaml,html,ruby,kivy,tmpl,css,hbs,scss setlocal autoindent tabstop=2 shiftwidth=2 expandtab
+autocmd Filetype yaml,html,ruby,kivy,tmpl,css,hbs,scss,sh setlocal autoindent tabstop=2 shiftwidth=2 expandtab
 autocmd BufRead,BufNewFile *.ts set filetype=typescript
 autocmd BufRead,BufNewFile *.conf set filetype=conf
 autocmd BufRead,BufNewFile *.scss set filetype=css
 autocmd BufRead,BufNewFile *.deploy set filetype=yaml
 autocmd BufRead,BufNewFile *.yml set filetype=yaml
 autocmd BufRead,BufNewFile Vagrantfile* set filetype=ruby
-autocmd BufRead,BufNewFile *.txt,*.md set filetype=markdown textwidth=80
+autocmd BufRead,BufNewFile *.txt set filetype=markdown
 autocmd BufRead,BufNewFile Dockerfile.* set filetype=dockerfile
 autocmd BufNewFile,BufRead *.groovy  set filetype=groovy
 autocmd BufNewFile,BufRead *.jl  set filetype=julia
 
 " Turn on spell-checking in text files
-" au BufRead,BufNewFile *.md,*.txt,*.rst setlocal spell spelllang=en_us
+au BufRead,BufNewFile *.md,*.txt,*.rst,*.tf setlocal sw=2 ts=2 expandtab
 "
 " Auto-recognize groovy scripts by the shebang
 if did_filetype() " Already recognized filetype
@@ -431,7 +447,7 @@ noremap <C-c> :noh<return>
 :nmap <Leader>v :e $MYVIMRC
 
 " Use 'q' to close netrw window
-autocmd FileType netrw nnoremap q :bd<CR>
+autocmd FileType netrw nnoremap q :bd
 
 " Look for a tags file going up to root
 set tags=./tags;/

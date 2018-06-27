@@ -12,3 +12,4 @@ pip_packages:
 calibre:
   dl_dest: /tmp/calibre-installer.py
   install_dest: "/home/{{ ansible_user }}/.local/calibre"
+  desktop_dest: "/home/{{ ansible_user }}/.local/share/applications/calibre.desktop"

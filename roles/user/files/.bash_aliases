@@ -3,6 +3,7 @@
 
 alias rals='. ~/.bash_aliases'
 alias rebash='. ~/.bash_profile'
+alias vals='vim ~/.bash_aliases'
 
 # System aliases
 alias ll='ls -alFhtA'
@@ -19,6 +20,9 @@ ipv4addr() {
 
 # Usage: cat file.txt | xclipd
 alias xclipd='xclip -selection clipboard'
+
+# Overrides the 'open' command
+alias open='xdg-open'
 
 detectGoPkg() {
 	local gosrc=$HOME/go/src/
@@ -223,27 +227,34 @@ latest(){
 #   PROJECT: Name of project directory.
 ###############################################################################
 work() {
-	local PROJECT="$1"
-    # Where your code|projects live
-    local DEV_DIRS=(
+	local project="$1"
+  # Search results
+  local results
+  # Where your code|projects live
+  local dev_dirs=(
+    "$HOME/Sync/src"
 		"$HOME/src/"
 		"$(pwd)"
-        "$HOME"
+    "$HOME"
 	)
-    # Change to the first matching directory
+  # Change to the first matching directory
+  results=("$(
+    find "${dev_dirs[@]}" -type d -maxdepth 3 -name "${project}" 2>/dev/null \
+      | sort -u)"
+  )
+  # printf "Raw Results]\n%s\n\n" "${results[*]}"
 	# shellcheck disable=SC2086
-    local WORK_DIR="$(
-        find "${DEV_DIRS[@]}" -maxdepth 3 -name $PROJECT 2>/dev/null \
-            | sort \
-            | head -n 1
-    )"
-	if [[ -z ${WORK_DIR// } ]]; then
-		echo "$PROJECT not found"
+  #IFS=$'\n' results=($(sort -u <<< "${results[*]}"))
+  #unset IFS
+  # printf "Results]\n%s\n\n" "${results[*]}"
+  # printf "Top Result] %s\n" "${results[0]}"
+	if [[ -z ${results[0]// } ]]; then
+		echo "$project not found"
 		return 1
 	fi
-    echo "Changing to $WORK_DIR"
-    cd "$WORK_DIR"
-	# tmux rename-window "$PROJECT"
+  printf "pushd: "
+  pushd "${results[0]}"
+	tmux rename-window "$project"
 }
 
 ###############################################################################
@@ -414,6 +425,11 @@ alias rmpyc="find . -name __pycache__ -type d -delete -o -name '*.pyc' -type f -
 alias ipy=ipython3
 
 ###############################################################################
+# Haskell
+###############################################################################
+alias hask='stack ghci'
+
+###############################################################################
 # Go
 ###############################################################################
 
@@ -437,51 +453,17 @@ gopkg() {
 
 
 # Git
-###############################################################################
+alias g="git"
+alias push="git push"
+alias pull="git pull"
+
+# Configure repo to be me
 git-me() {
 	git config user.email j.american.db@gmail.com
 	git config user.name "Jeremy Dobbins-Bucklad"
 	git config user.signingkey E180BC0A
 }
-alias ga='git add'
-alias gai='git add --interactive'
-alias gap='git add --patch'
-alias gall='git add . --all'
-alias gals="grep git ~/.bash_aliases"
-alias gb='git branch'
-alias gbv='git branch -vv'
-alias gc='git checkout'
-alias gcb='git checkout -t origin/master -b'
-alias gcl='git clone'
-alias gd='git diff'
-alias gdc='git diff --cached'
-alias gdcss='git diff --cached --shortstat'
-alias gdss='git diff --shortstat'
-alias gf='git fetch'
-alias gfb='git filter-branch --tree-filter'
-alias gl='git log'
-alias gl1='git log --oneline'
-alias gm='git commit -m'
-alias gma='git commit -am'
-alias gms='git commit -S -m'
-alias gmt='git mergetool'
-alias gra='git remote add'
-alias grc='git rebase --continue'
-alias gsk='git rebase --skip'
-alias grr='git remote rm'
-alias grv='git remote -v'
-alias gs='git status'
-alias pull='git pull'
-alias push='git push'
-###############################################################################
-# Add filename to the git repo's exclude list
-###############################################################################
-gign() {
-	echo "$1" >> "$(git rev-parse --show-toplevel)/.git/info/exclude"
-}
 
-# Removes old branches that have been merged into master
-alias sweep="git branch --merged master | egrep -v '^\s+master$' | xargs -n 1 git branch -d"
 # Upgrade every Git repo under a directory name using 'git-up'
 gitemup() {
     printf "Updating git repos in %s..." "$1"
@@ -491,11 +473,12 @@ gitemup() {
     wait
     echo "Done."
 }
+
 # Terraform
 alias tf='terraform'
 
 # Vagrant
-alias vals='grep vagrant ~/.bash_aliases'
+alias valias='grep vagrant ~/.bash_aliases'
 alias v='vagrant'
 alias vb='vagrant box'
 alias vbl='vagrant box list'
@@ -572,7 +555,7 @@ tls() {
 			openssl pkcs7 -print_certs -text -noout
 			;;
         server) # Open a TLS connection to a live server; $2 should be 'host:port'
-            openssl s_client -connect "$2" -showcerts -servername "${3:-443}"
+            openssl s_client -connect "$2:${3:-443}" -showcerts -servername "$2"
             ;;
 		compare) # Check a public cert and private key for compatibility
 			openssl x509 -noout -modulus -in "$2" | openssl md5;\
@@ -668,4 +651,4 @@ function alias_completion {
     done < <(alias -p | sed -Ene "s/$alias_regex/\1 '\2' '\3'/p")
     source "$tmp_file" && rm -f "$tmp_file"
 }; # alias_completion
-printf "Loaded alias completions in %s\n" "$(time_since "$pre_auto_complete")"
+# printf "Loaded alias completions in %s\n" "$(time_since "$pre_auto_complete")"

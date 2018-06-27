@@ -6,3 +6,15 @@
 
 - name: Execute installer
   command: python -c "exec(open('{{ calibre.dl_dest }}').read()); main('{{ calibre.install_dest }}''', True)"
+
+- name: Create launcher icon
+  copy:
+    src: "{{ playbook_dir }}/roles/user/files/calibre.desktop"
+    dest: "{{ calibre.desktop_dest }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: 0644
+    force: yes
+
+- name: Verify desktop file
+  command: "desktop-file-validate {{ calibre.desktop_dest }}"

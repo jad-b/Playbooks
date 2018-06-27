@@ -1,5 +1,11 @@
 ---
 
-- include: packages.yml
+- import_tasks: packages.yml
   tags: packages
+  become: yes
+
+- name: Create journal directory
+  file:
+    state: directory
+    path: "/var/log/journal"
   become: yes

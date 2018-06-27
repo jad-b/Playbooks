@@ -18,8 +18,8 @@ time_since(){
 print_pending() {
     # Display our tasks for the day.
     WAITING_FOR=~/Dropbox/Waiting-For.txt
-    if hash pending 2>/dev/null && [[ -f "$WAITING_FOR" ]]; then
-        pending "$WAITING_FOR" 2>/dev/null
+    if hash pending 2>/dev/null && [[ -f "${WAITING_FOR}" ]]; then
+        pending "${WAITING_FOR}" 2>/dev/null
     fi
 }
 # mkfifo tasks
@@ -30,7 +30,7 @@ pending_pid=$!
 # Baseline my PATH
 BASEPATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/snap/bin"
 reset_path(){
-    export PATH="$BASEPATH"
+    export PATH=${BASEPATH}
 }; reset_path
 
 export EDITOR=vim
@@ -38,22 +38,22 @@ export EMAIL="j.american.db@gmail.com"
 
 pre_bashrc=$(now)
 . ~/.bashrc
-printf "Loaded .bashrc in %s\n" "$(time_since "$pre_bashrc")"
+# printf "Loaded .bashrc in %s\n" "$(time_since "$pre_bashrc")"
 
 if [ -f ~/.bash_aliases ]; then
     pre_aliases=$(now)
     . ~/.bash_aliases
-    printf "Loaded .bash_aliases in %s\n" "$(time_since "$pre_aliases")"
+    # printf "Loaded .bash_aliases in %s\n" "$(time_since "$pre_aliases")"
 fi
 
 # Local binaries
 if [ -d ~/.local/bin ]; then
-    export PATH="~/.local/bin:$PATH"
+    export PATH="${HOME}/.local/bin:${PATH}"
 fi
 
-if [ -d "$HOME/.local/opt" ]; then
-	for path in $HOME/.local/opt/**/bin; do
-		export PATH="$PATH:$path"
+if [ -d "${HOME}/.local/opt" ]; then
+	for path in ${HOME}/.local/opt/**/bin; do
+		export PATH="${PATH}:$path"
 	done
 fi
 
@@ -64,8 +64,8 @@ fi
 
 # Golang
 if [ -d /usr/local/go ]; then
-    export PATH="/usr/local/go/bin:$PATH"
-    export GOPATH="$HOME/src"
+    export PATH="/usr/local/go/bin:${PATH}"
+    export GOPATH="${HOME}/src"
     export GOMAXPROCS=$(nproc)
 fi
 
@@ -76,30 +76,30 @@ fi
 
 # Julia
 JULIA_VERSION=0.6.0
-JULIA_PATH="$HOME/julia/${JULIA_VERSION}"
-if [ -d "$JULIA_PATH" ]; then
-    export PATH="$JULIA_PATH/bin:$PATH"
+JULIA_PATH="${HOME}/julia/${JULIA_VERSION}"
+if [ -d "${JULIA_PATH}" ]; then
+    export PATH="${JULIA_PATH}/bin:${PATH}"
 fi
 
 # Node & NPM
 if hash npm 2>/dev/null; then
-    NPM_PACKAGES="$HOME/.local/npm-packages"
-    export PATH="$NPM_PACKAGES/bin:$PATH"
+    NPM_PACKAGES="${HOME}/.local/npm-packages"
+    export PATH="${NPM_PACKAGES}/bin:${PATH}"
     unset MANPATH
-    export MANPATH="$NPM_PACKAGES/share/man:$(manpath)"
-    export NODE_PATH="$NPM_PACKAGES/lib/node_modules:$NODE_PATH"
+    export MANPATH="${NPM_PACKAGES}/share/man:$(manpath)"
+    export NODE_PATH="${NPM_PACKAGES}/lib/node_modules:${NODE_PATH}"
 fi
 
 # Python
 export PYTHONDONTWRITEBYTECODE=true
 # Pyenv
 if hash pyenv 2>/dev/null; then
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
-    if [ -d "$PYENV_ROOT" ]; then
+    export PYENV_ROOT="${HOME}/.pyenv"
+    export PATH="${PYENV_ROOT}/bin:${PATH}"
+    if [ -d "${PYENV_ROOT}" ]; then
         eval "$(pyenv init -)"
     fi
-    if [ -d "$PYENV_ROOT/plugins/pyenv-virtualenv" ]; then
+    if [ -d "${PYENV_ROOT}/plugins/pyenv-virtualenv" ]; then
         eval "$(pyenv virtualenv-init -)"
     fi
 fi
@@ -110,10 +110,20 @@ if hash virtualenv 2>/dev/null; then
     export PROJECT_HOME=~/dev
 fi
 
+# Setup stack auto-completion
+if type stack 2>/dev/null; then
+  eval "$(stack --bash-completion-script stack)"
+fi
+
 # Rust
 if [ -d ~/.cargo ]; then
-    export PATH="$HOME/.cargo/bin:$PATH"
+    export PATH="${HOME}/.cargo/bin:${PATH}"
 fi
 
 # wait "$pending_pid"
 # cat tasks
+# ? How to close 'tasks'?
+
+export PATH="${HOME}/.cargo/bin:${PATH}"
+
+echo "Week $(date +%W)"

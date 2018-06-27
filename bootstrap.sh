@@ -1,7 +1,7 @@
 #!/bin/sh -eux
 
 # Install pip
-sudo apt-get install -y \
+sudo  apt-get install -y \
 	aptitude \
 	libssl-dev \
         libffi-dev \
@@ -10,7 +10,8 @@ sudo apt-get install -y \
 
 # Install ansible
 pip3 install -U pip
-pip3 install --user -U ansible
+# 20171124: 2.4.1  got hung while gathering facts
+pip3 install --user -U ansible==2.4.0
 
 # Run the ansible playbooks
 ./run.sh -K "$@"

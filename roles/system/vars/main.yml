@@ -1,13 +1,12 @@
 ---
 apps:
   # Packages affecting the OS and foundational functionality
+  - anki
   - airvpn
   - build-essential
   - compiz-plugins
   - compizconfig-settings-manager
-  - fluxgui
   - git
-  - fbreader
   - google-chrome-stable
   - handbrake-gtk
   - htop
@@ -15,8 +14,10 @@ apps:
   - meld
   - network-manager-openvpn-gnome
   - powertop
-  - resilio-sync
+  - redshift-gtk
   - software-properties-common
+  - syncthing
+  - syncthing-gtk
   - texlive-full
   - tlp
   - tmux
@@ -50,22 +51,3 @@ apps:
   - nmap
   - traceroute
   - tshark
-  # # Bluetooth
-  # - bluez
-  # - bluez-alsa
-  # - bluez-audio
-  # - bluez-btsco
-  # - bluez-compat
-  # - bluez-cups
-  # - bluez-dbg
-  # - bluez-gstreamer
-  # - bluez-hcidump
-  # - bluez-pcmcia-support
-  # - bluez-tools
-  # - bluez-utils
-  # - python-bluez
-  # - bluewho
-  # - indicator-bluetooth
-  # - libbluetooth-dev
-  # - libgnome-bluetooth11
-  # - libbluetooth3

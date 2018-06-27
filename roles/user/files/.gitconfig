@@ -1,14 +1,50 @@
-[user]
-    name = jad-b
-    email = j.american.db@gmail.com
 [alias]
+    aliases = !git config -l | grep alias | sed -n "/alias./s/alias.//p"
+    a = add
+    ai = add --interactive
+    all = add . --all
+    ap = add --patch
+    b = branch
+    bv = branch -vv
+    c = checkout
+    co = checkout
+    cob = checkout -t origin/master -b
+    cl = clone
+    cm = commit -m
+    cma = commit -am
+    cms = commit -S -m
+    d = diff
+    dc = diff --cached
+    dcss = diff --cached --shortstat
+    disc = checkout --
     discard = checkout --
+    dss = diff --shortstat
+    f = fetch
+    fb = filter-branch --tree-filter
     hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+    # Add filename to the git repo's exclude list
+    ign = !echo "$1" >> "$(git rev-parse --show-toplevel)/.git/info/exclude"
     ignore = update-index --assume-unchanged
-    unignore = update-index --no-assume-unchanged
+    l = log
+    l1 = log --oneline
     last = log -1 HEAD
+    mt = mergetool
     pop = stash pop
+    pull = pull
+    push = push
+    rbs = rebase --skip
+    rbc = rebase --continue
+    ra = remote add
+    rrm = remote rm
+    rv = remote -v
+    s = status
+    # Removes old branches that have been merged into master
+    # "(^\*|master)" excludes current branch & master
+	sweep = !git branch --merged master | egrep -v \"(^\\*|master)\" | xargs git branch -d
+    unignore = update-index --no-assume-unchanged
     unstage = reset HEAD --
+    untracked = ls-files --others --exclude-standard
+	up = !/home/jdb/.local/bin/git-up && git sweep
 [branch]
     autosetupmerge = always
     autosetuprebase = always
@@ -35,7 +71,8 @@
     prompt = false
 [rerere]
     enabled = true
-[user]
-    signingkey = 7C383024
 [url "git@github.com:"]
 	insteadOf = gh:
+[user]
+	name = Jeremy Dobbins-Bucklad
+	email = jeremy.dobbins.bucklad@oracle.com

@@ -16,3 +16,13 @@
     - .inputrc
     - .tmux.conf
     - .dockerrc
+
+- name: Setup Git configuration
+  git_config:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    scope: system
+  with_dict:
+    user.name: jad-b
+    user.email: j.american.db@gmail.com
+    user.signingkey: N/A

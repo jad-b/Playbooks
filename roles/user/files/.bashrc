@@ -2,6 +2,7 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 set -P
+set -o pipefail
 
 # Auto-start tmux, if available
 #if command -v tmux>/dev/null; then  # If tmux exists
@@ -54,7 +55,7 @@ stty -ixon
 
 # Build an array of file fames
 src_dirs=(~/src/*)
-export CDPATH=".:~/:/..:../.." # :$(echo ${src_dirs[*]// /:})"
+# export CDPATH=".:~/:/..:../.." # :$(echo ${src_dirs[*]// /:})"
 
 ### Prompt coloring ###
 export TERM=xterm-256color
@@ -67,68 +68,56 @@ esac
 # uncomment for a colored prompt, if the terminal has the capability; turned
 # off by default to not distract the user: the focus in a terminal window
 # should be on the output of commands, not on the prompt
-# force_color_prompt=yes
+force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-    # We have color support; assume it's compliant with Ecma-48
-    # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-    # a case would tend to support setf rather than setaf.)
-    color_prompt=yes
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
     else
-    color_prompt=
+        color_prompt=
     fi
 fi
 
 if [ "$color_prompt" = yes ]; then
-	if hash __docker_machine_ps1 2>/dev/null; then
-		# Use the docker-machine prompt
-		PS1='[\u@\h \[\033[01;34m\]\W\[\033[00m\]$(__docker_machine_ps1)]\$ '
-	else
-		## Full-color username@hostname:working dir$
-		PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-	fi
+    ## Full-color username@hostname:working dir$
+    # PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\W\[\033[00m\]\$ '
 else
-    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+    # PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+    PS1='\u@\h \$ '
 fi
 unset color_prompt force_color_prompt
 
 # If this is an xterm set the title to user@host:dir
-case "$TERM" in
-xterm*|rxvt*)
-    PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"'
+#case "$TERM" in
+#xterm*|rxvt*)
+    #PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"'
 
-    # Show the currently running command in the terminal title:
-    # http://www.davidpashley.com/articles/xterm-titles-with-bash.html
-    show_command_in_title_bar() {
-		# shellcheck disable=SC1001
-        case "$BASH_COMMAND" in
-            *\033]0*)
-                # The command is trying to set the title bar as well;
-                # this is most likely the execution of $PROMPT_COMMAND.
-                # In any case nested escapes confuse the terminal, so don't
-                # output them.
-                ;;
-            *)
-                # echo -ne "\033]0;${USER}@${HOSTNAME}: ${BASH_COMMAND}\007"
-                echo -ne "\033]0;${BASH_COMMAND}\007"
-                ;;
-        esac
-    }
-    trap show_command_in_title_bar DEBUG
-    ;;
-*)
-    ;;
-esac
-
-# If this is an xterm set the title to user@host:dir
-# case "$TERM" in
-# xterm*|rxvt*)
-#     PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-#     ;;
-# *)
-#     ;;
-# esac
+    ## Show the currently running command in the terminal title:
+    ## http://www.davidpashley.com/articles/xterm-titles-with-bash.html
+    #show_command_in_title_bar() {
+		## shellcheck disable=SC1001
+        #case "$BASH_COMMAND" in
+            #*\033]0*)
+                ## The command is trying to set the title bar as well;
+                ## this is most likely the execution of $PROMPT_COMMAND.
+                ## In any case nested escapes confuse the terminal, so don't
+                ## output them.
+                #;;
+            #*)
+                ## echo -ne "\033]0;${USER}@${HOSTNAME}: ${BASH_COMMAND}\007"
+                #echo -ne "\033]0;${BASH_COMMAND}\007"
+                #;;
+        #esac
+    #}
+    #trap show_command_in_title_bar DEBUG
+    #;;
+#*)
+    #;;
+#esac
 
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
@@ -197,11 +186,6 @@ fi
 
 # printf "Sourced completions in %s\n" "$(time_since "$pre_complete")"
 
-# Kubernetes
-if hash kubectl 2>/dev/null; then
-	source <(kubectl completion bash)
-fi
-
 # Set default permissions
 # User can do anything
 # Group can read + execute
@@ -211,40 +195,3 @@ umask 027
 if [ -e ~/.secrets ]; then
 	source ~/.secrets
 fi
-
-###############################################################################
-# Add binaries from .local
-###############################################################################
-
-SSH_ENV="$HOME/.ssh/environment"
-
-start_agent () {
-    echo -n "Initialising new SSH agent..."
-	# Store SSH environment variables from ssh-agent
-    /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
-    echo succeeded
-    if [ ! -d ~/.ssh ]; then # Create ~/.ssh if missing
-        mkdir ~/.ssh
-    fi
-    chmod 600 "${SSH_ENV}"  # Make readable
-    . "${SSH_ENV}" > /dev/null  # Source env vars
-    /usr/bin/ssh-add;  # Will prompt user for SSH key pasphrase
-}
-
-# Source SSH settings, if applicable
-source_ssh () {
-    if [ -f "${SSH_ENV}" ]; then  # If environment file is found
-        . "${SSH_ENV}" > /dev/null  # Source it.
-        # Check if ssh-agent is running
-        if ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null; then
-            # echo "SSH agent is already running"
-            true
-        else
-            start_agent;
-        fi
-    else
-        start_agent;
-    fi
-}
-
-source_ssh
