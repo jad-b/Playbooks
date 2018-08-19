@@ -15,6 +15,7 @@ apps:
   - network-manager-openvpn-gnome
   - powertop
   - redshift-gtk
+  - signal-desktop
   - software-properties-common
   - syncthing
   - syncthing-gtk

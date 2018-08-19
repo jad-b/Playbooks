@@ -26,3 +26,4 @@
     user.name: jad-b
     user.email: j.american.db@gmail.com
     user.signingkey: N/A
+  become: yes
