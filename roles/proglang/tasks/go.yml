@@ -9,7 +9,7 @@
     state: absent
     path: "{{ go.dir }}"
   become: yes
-  when: go_installed|failed
+  when: go_installed is failed
 
 - name: Download Go
   unarchive:
@@ -17,4 +17,4 @@
     dest: /usr/local/
     remote_src: True
   become: yes
-  when: go_installed|failed
+  when: go_installed is failed
