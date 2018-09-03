@@ -65,7 +65,7 @@ fi
 # Golang
 if [ -d /usr/local/go ]; then
     export PATH="/usr/local/go/bin:${PATH}"
-    export GOPATH="${HOME}"
+    export GOPATH="${HOME}/go"
     export GOMAXPROCS=$(nproc)
 fi
 
