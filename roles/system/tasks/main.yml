@@ -4,6 +4,10 @@
   tags: packages
   become: yes
 
+- import_tasks: docker.yml
+  tags: docker
+  become: yes
+
 - name: Create journal directory
   file:
     state: directory

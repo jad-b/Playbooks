@@ -4,8 +4,6 @@
     name: "{{ item }}"
     update_cache: yes
   with_items:
-    - "linux-image-extra-{{ ansible_kernel }}"
-    - linux-image-extra-virtual
     - apt-transport-https
     - ca-certificates
     - curl
@@ -31,3 +29,9 @@
     append: yes
     groups: docker
     name: "{{ ansible_user }}"
+
+- name: Install docker-compose
+  pip:
+    name: docker-compose
+    executable: pip3
+    extra_args: "--user -U"
