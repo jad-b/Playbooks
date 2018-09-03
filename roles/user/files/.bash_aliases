@@ -232,7 +232,6 @@ work() {
   local results
   # Where your code|projects live
   local dev_dirs=(
-    "$HOME/Sync/src"
 		"$HOME/src/"
 		"$(pwd)"
     "$HOME"
