@@ -120,14 +120,15 @@ fi
 # ? How to close 'tasks'?
 
 # src=http://rabexc.org/posts/pitfalls-of-ssh-agents
-ssh-add -l &>/dev/null
-if [ "$?" == 2 ]; then
-  echo "ssh-agent either not running or configured in this shell"
+test -n "${SSH_AGENT_PID}" && ps -p ${SSH_AGENT_PID} >/dev/null
+if [[ "$?" -ne 0 ]]; then
+  # Try loading the last config, if available
   test -r ~/.ssh-agent && \
     eval "$(<~/.ssh-agent)" >/dev/null
 
-  ssh-add -l &>/dev/null
-  if [ "$?" == 2 ]; then
+  # Re-test
+  test -n "${SSH_AGENT_PID}" && ps -p ${SSH_AGENT_PID} >/dev/null
+  if [[ "$?" -ne 0 ]]; then
     echo -n "Starting ssh-agent..."
     (umask 066; ssh-agent > ~/.ssh-agent)
     eval "$(<~/.ssh-agent)" >/dev/null
