@@ -110,11 +110,6 @@ if hash virtualenv 2>/dev/null; then
     export PROJECT_HOME=~/dev
 fi
 
-# Setup stack auto-completion
-if type stack 2>/dev/null; then
-  eval "$(stack --bash-completion-script stack)"
-fi
-
 # Rust
 if [ -d ~/.cargo ]; then
     export PATH="${HOME}/.cargo/bin:${PATH}"
@@ -124,6 +119,23 @@ fi
 # cat tasks
 # ? How to close 'tasks'?
 
-export PATH="${HOME}/.cargo/bin:${PATH}"
+# src=http://rabexc.org/posts/pitfalls-of-ssh-agents
+ssh-add -l &>/dev/null
+if [ "$?" == 2 ]; then
+  echo "ssh-agent either not running or configured in this shell"
+  test -r ~/.ssh-agent && \
+    eval "$(<~/.ssh-agent)" >/dev/null
+
+  ssh-add -l &>/dev/null
+  if [ "$?" == 2 ]; then
+    echo -n "Starting ssh-agent..."
+    (umask 066; ssh-agent > ~/.ssh-agent)
+    eval "$(<~/.ssh-agent)" >/dev/null
+    ssh-add
+    echo "done."
+  fi
+else
+  echo "ssh-agent found; taking no action"
+fi
 
 echo "Week $(date +%W)"
