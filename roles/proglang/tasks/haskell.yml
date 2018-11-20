@@ -7,7 +7,7 @@
 - name: Install Stack
   shell: "curl -sSL https://get.haskellstack.org/ | sh"
   become: yes
-  when: stack_installed|failed
+  when: stack_installed is failed
 
 - name: Install Glassgow-Haskell Compiler and Friends
   command: "stack setup"
@@ -29,3 +29,12 @@
     group: "{{ ansible_user }}"
     state: link
     force: yes
+
+- name: Install expected packages
+  command: "stack {{ item }}"
+  loop:
+    - hlint
+    - hindent
+    - hdevtools
+    - hoogle
+
