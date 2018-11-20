@@ -45,20 +45,24 @@ Plugin 'edkolev/tmuxline.vim'
 Plugin 'tpope/vim-dispatch'
 
 " ~~~~~~~~~~~~~~ Language support ~~~~~~~~~~~~~~
+Plugin 'w0rp/ale'
 Plugin 'fatih/vim-go' " Go support
 Plugin 'chase/vim-ansible-yaml'
+" Python
 Plugin 'tell-k/vim-autopep8' " Python - automatic pep8 fixes
 Plugin 'vim-scripts/indentpython.vim' " Python PEP8 Indenting
+"Plugin 'klen/python-mode' " Too much!
 Plugin 'hashivim/vim-hashicorp-tools' " HCL format
-Plugin 'JuliaEditorSupport/julia-vim' " Julia
+" Plugin 'JuliaEditorSupport/julia-vim' " Julia
 Plugin 'godlygeek/tabular' " Quickly align text
 Plugin 'plasticboy/vim-markdown' " Markdown
 Plugin 'cespare/vim-toml' " TOML
-Plugin 'derekwyatt/vim-scala' " Scala
-"Plugin 'klen/python-mode' " Too much!
+" Plugin 'derekwyatt/vim-scala' " Scala
 Plugin 'rust-lang/rust.vim'
-Plugin 'lukerandall/haskellmode-vim'
-Plugin 'w0rp/ale'
+" Haskell
+Plugin 'bitc/vim-hdevtools'
+Plugin 'neovimhaskell/haskell-vim'
+Plugin 'alx741/vim-hindent'
 
 " ~~~~~~~~~~~~~~ Front-end Development ~~~~~~~~~~~~~~
 " Close HTML/XML tags with ctrl-_
@@ -126,6 +130,9 @@ let g:netrw_winsize=30
 " Show docstrings for folded code
 " let g:SimpylFold_docstring_preview=1
 
+" vim-hdevtools
+let g:hdevtools_stack = 1
+
 " ---------- tag-bar ----------
 nmap <F8> :TagbarToggle<CR>
 
@@ -162,43 +169,6 @@ let g:ale_python_pylint_executable = 'python3'   " or 'python' for Python 2
 let g:ale_python_pylint_options = '-rcfile ~/.pylintrc'
 let g:ale_python_flake8_executable = 'python3'
 let g:ale_python_flake8_options = '-m flake8'
-
-"  Syntastic
-let g:go_fmt_command = "goimports"
-" turn highlighting on
-let g:go_highlight_functions = 1
-let g:go_highlight_methods = 1
-let g:go_highlight_structs = 1
-let g:go_highlight_operators = 1
-let g:go_highlight_build_constraints = 1
-let g:go_fmt_fail_silently = 1
-let g:tagbar_type_go = {
-    \ 'ctagstype' : 'go',
-    \ 'kinds'     : [
-        \ 'p:package',
-        \ 'i:imports:1',
-        \ 'c:constants',
-        \ 'v:variables',
-        \ 't:types',
-        \ 'n:interfaces',
-        \ 'w:fields',
-        \ 'e:embedded',
-        \ 'm:methods',
-        \ 'r:constructor',
-        \ 'f:functions'
-    \ ],
-    \ 'sro' : '.',
-    \ 'kind2scope' : {
-        \ 't' : 'ctype',
-        \ 'n' : 'ntype'
-    \ },
-    \ 'scope2kind' : {
-        \ 'ctype' : 't',
-        \ 'ntype' : 'n'
-    \ },
-    \ 'ctagsbin'  : 'gotags',
-    \ 'ctagsargs' : '-sort -silent'
-\ }
 
 " Python-mode
 " let g:pymode_doc = 0
@@ -367,7 +337,7 @@ autocmd BufNewFile,BufRead *.groovy  set filetype=groovy
 autocmd BufNewFile,BufRead *.jl  set filetype=julia
 
 " Turn on spell-checking in text files
-au BufRead,BufNewFile *.md,*.txt,*.rst,*.tf setlocal sw=2 ts=2 expandtab
+au BufRead,BufNewFile *.md,*.txt,*.rst,*.tf setlocal sw=2 ts=2 expandtab tw=0
 "
 " Auto-recognize groovy scripts by the shebang
 if did_filetype() " Already recognized filetype
@@ -420,6 +390,14 @@ nnoremap <Leader>max :call ToggleMaxWins()<CR>
 autocmd InsertEnter * :set number
 autocmd InsertLeave * :set relativenumber
 
+" Triger `autoread` when files changes on disk
+" https://unix.stackexchange.com/questions/149209/refresh-changed-content-of-file-opened-in-vim/383044#383044
+" https://vi.stackexchange.com/questions/13692/prevent-focusgained-autocmd-running-in-command-line-editing-mode
+autocmd FocusGained,BufEnter,CursorHold,CursorHoldI * if mode() != 'c' | checktime | endif
+" Notification after file change
+" https://vi.stackexchange.com/questions/13091/autocmd-event-for-autoread
+autocmd FileChangedShellPost *
+  \ echohl WarningMsg | echo "File changed on disk. Buffer reloaded." | echohl None
 
 " ------------------------------------------------------------------------------
 "  Custom mappings

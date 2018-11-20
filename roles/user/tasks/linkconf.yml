@@ -10,7 +10,6 @@
   with_items:
     - .bash_aliases
     - .bashrc
-    - .vimrc
     - .bash_profile
     - .gitconfig
     - .inputrc
