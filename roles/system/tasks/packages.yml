@@ -11,6 +11,7 @@
     - 'deb https://apt.syncthing.net/ syncthing stable'
     - 'ppa:jonathonf/python-3.6'
     - 'ppa:jonathonf/vim'
+    - 'ppa:neovim-ppa/stable'
     - 'ppa:nilarimogard/webupd8'
     - 'ppa:stebbins/handbrake-releases'
     - 'ppa:teejee2008/ppa'

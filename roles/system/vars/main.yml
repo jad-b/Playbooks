@@ -2,7 +2,6 @@
 apps:
   # Packages affecting the OS and foundational functionality
   - anki
-  - airvpn
   - build-essential
   - compiz-plugins
   - compizconfig-settings-manager
@@ -12,6 +11,7 @@ apps:
   - htop
   - jq
   - meld
+  - neovim
   - network-manager-openvpn-gnome
   - powertop
   - redshift-gtk
@@ -20,13 +20,14 @@ apps:
   - syncthing
   - syncthing-gtk
   - texlive-full
+  - tiptop
   - tlp
   - tmux
   - tree
   - ubuntu-developer-tools-center
   - ubuntu-restricted-extras
   - unity-tweak-tool
-  - vim-gnome
+  # - vim-gnome
   - xclip
   - ukuu
   # Python system libraries
