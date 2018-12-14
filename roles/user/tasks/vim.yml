@@ -9,7 +9,7 @@
   command: vim -E -s -c "source ~/.vimrc" +PluginUpdate +qall
   ignore_errors: true
 
-- name: Symlink Vim configs
+- name: Symlink local Vim configs
   file:
     src: "{{ playbook_dir }}/roles/user/files/{{ item.src }}"
     dest: "/home/{{ ansible_user }}/{{ item.dst }}"
@@ -20,3 +20,15 @@
   loop:
     - { src: ".vimrc", dst: ".vimrc" }
     - { src: "ftplugin", dst: ".vim/ftplugin" }
+
+- name: Symlink system Vim configs
+  file:
+    src: "{{ playbook_dir }}/roles/user/files/{{ item.src }}"
+    dest: "{{ item.dst }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    state: link
+    force: yes
+  become: yes
+  loop:
+    - { src: "nvim_tmpfiles.conf", dst: "/etc/tmpfiles.d/nvim.conf" }
