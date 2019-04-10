@@ -6,6 +6,13 @@ now() {
 # Capture beginning of run time
 start="$(now)"
 
+# Create symlinks under $HOME to the top-level directories within Sync
+link_sync_dirs() {
+  for f in $(find ~/Sync -maxdepth 1 -not \( -path ~/Sync -o -name '\.*' \) -type d); do
+    ln -sT ${f} ~/${f#~/Sync/};
+  done
+}
+
 time_since(){
 	diff="$(($(date +%s%N)-$1))"
 	# Drop nanoseconds through milliseconds (/10**9)
@@ -112,7 +119,8 @@ fi
 
 # Rust
 if [ -d ~/.cargo ]; then
-    export PATH="${HOME}/.cargo/bin:${PATH}"
+    # export PATH="${HOME}/.cargo/bin:${PATH}"
+    source ~/.cargo/env
 fi
 
 # wait "$pending_pid"
@@ -140,3 +148,5 @@ else
 fi
 
 echo "Week $(date +%W)"
+
+export PATH="$HOME/.cargo/bin:$PATH"

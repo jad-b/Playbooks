@@ -4,7 +4,7 @@
 sudo apt-get install -y \
 	aptitude \
 	libssl-dev \
-    libffi-dev \
+  libffi-dev \
 	python-dev \
 	python3-pip
 

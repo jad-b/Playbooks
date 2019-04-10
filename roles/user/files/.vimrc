@@ -41,8 +41,9 @@ Plugin 'scrooloose/nerdcommenter'
 " Smarter code folding
 Plugin 'tmhedberg/SimpylFold'
 " Display tmux status bar
-Plugin 'edkolev/tmuxline.vim'
+" Plugin 'edkolev/tmuxline.vim'
 Plugin 'tpope/vim-dispatch'
+Plugin 'neomake/neomake'
 
 " ~~~~~~~~~~~~~~ Language support ~~~~~~~~~~~~~~
 Plugin 'w0rp/ale'
@@ -63,6 +64,7 @@ Plugin 'rust-lang/rust.vim'
 Plugin 'bitc/vim-hdevtools'
 Plugin 'neovimhaskell/haskell-vim'
 Plugin 'alx741/vim-hindent'
+Plugin 'parsonsmatt/intero-neovim'
 
 " ~~~~~~~~~~~~~~ Front-end Development ~~~~~~~~~~~~~~
 " Close HTML/XML tags with ctrl-_
@@ -185,26 +187,6 @@ let g:vim_markdown_no_extensions_in_markdown = 1
 " Auto-save current file before following link
 let g:vim_markdown_autowrite = 1
 
-" Syntastic
-set statusline+=%#warningmsg#
-set statusline+=%{SyntasticStatuslineFlag()}
-set statusline+=%*
-
-let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 1
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 1
-let g:syntastic_aggregate_errors = 1
-" Point Python interpreter to currently the Pyenv python
-" let g:syntastic_python_python_exec = '/home/jdb/.pyenv/shims/python'
-let g:syntastic_python_python_exec = '/usr/bin/python3'
-let g:syntastic_python_checkers = ['flake8', 'python', 'pylint']
-let g:syntastic_python_flake8_exec = 'python3'
-let g:syntastic_python_flake8_args = ['-m', 'flake8']
-
-let g:syntastic_eruby_ruby_quiet_messages =
-    \ {'regex': 'possibly useless use of a variable in void context'}
-
 " ------------------------------------------------------------------------------
 filetype plugin indent on
 " filetype indent on
@@ -324,7 +306,7 @@ fun! <SID>StripTrailingWhitespaces()
 endfun
 autocmd BufWritePre * :call <SID>StripTrailingWhitespaces()
 
-autocmd Filetype yaml,html,ruby,kivy,tmpl,css,hbs,scss,sh setlocal autoindent tabstop=2 shiftwidth=2 expandtab
+autocmd Filetype yaml,html,htmldjango,ruby,kivy,tmpl,css,hbs,scss,sh setlocal autoindent tabstop=2 shiftwidth=2 expandtab
 autocmd BufRead,BufNewFile *.ts set filetype=typescript
 autocmd BufRead,BufNewFile *.conf set filetype=conf
 autocmd BufRead,BufNewFile *.scss set filetype=css
@@ -335,6 +317,10 @@ autocmd BufRead,BufNewFile *.txt set filetype=markdown
 autocmd BufRead,BufNewFile Dockerfile.* set filetype=dockerfile
 autocmd BufNewFile,BufRead *.groovy  set filetype=groovy
 autocmd BufNewFile,BufRead *.jl  set filetype=julia
+
+" Automatically close the HTML tag once you type '</ SPACE'
+" http://vim.wikia.com/wiki/Auto_closing_an_HTML_tag
+:iabbrev </ </<C-X><C-O>
 
 " Turn on spell-checking in text files
 au BufRead,BufNewFile *.md,*.txt,*.rst,*.tf setlocal sw=2 ts=2 expandtab tw=0

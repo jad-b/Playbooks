@@ -8,8 +8,10 @@ set textwidth=79
 
 " w0rp/ale
 let b:ale_fix_on_save = 1
-let b:ale_linters = ['rls']
+let b:ale_linters = ['rls', 'cargo']
 let b:ale_fixers = ['rustfmt']
 
 let b:ale_rust_rustfmt_options = '--edition 2018'
 let b:ale_rust_rls_toolchain = 'nightly'
+
+let b:ale_rust_cargo_use_clippy = executable('cargo-clippy')

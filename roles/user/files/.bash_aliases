@@ -18,6 +18,10 @@ ipv4addr() {
 # Errors from this boot
 # journalctl -k -b -p err
 
+gtd() {
+  vim -O ~/Sync/@Home.md ~/Sync/@Anywhere.md
+}
+
 # Usage: cat file.txt | xclipd
 alias xclipd='xclip -selection clipboard'
 
@@ -243,8 +247,8 @@ work() {
   )
   # printf "Raw Results]\n%s\n\n" "${results[*]}"
 	# shellcheck disable=SC2086
-  #IFS=$'\n' results=($(sort -u <<< "${results[*]}"))
-  #unset IFS
+  IFS=$'\n' results=($(sort -u <<< "${results[*]}"))
+  unset IFS
   # printf "Results]\n%s\n\n" "${results[*]}"
   # printf "Top Result] %s\n" "${results[0]}"
 	if [[ -z ${results[0]// } ]]; then

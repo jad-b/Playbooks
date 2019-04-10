@@ -8,6 +8,11 @@ Current supported Ubuntu version = 16.04.3 (Xenial).
 
 Use `./run.sh` to wrap the `ansible-playbook` command with required/good options in place.
 
+## Manual Steps
+* Set `tmux` to run on terminal open:
+  * Check "login shell"
+  * Check "use custom command": `tmux new-session -A -s jdb`
+
 ## Roles
 `system` makes `sudo`-required changes, such as installing system packages and
 installing Docker. (needs `-K` as a CLI flag).
@@ -18,8 +23,7 @@ installing Docker. (needs `-K` as a CLI flag).
 `proglang` sets up various programming languages.
 
 ## Notes
-The default user is `ansible_user`, which should be the user who's running
-`ansible-playbooks` (or `run.sh`).
+The default user is `ansible_user`, which should be the user who's running `ansible-playbooks` (or `run.sh`).
 
 ## TODO
 - Setup ~/.ghci & ~/.stack/config.yaml
