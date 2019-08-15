@@ -2,6 +2,9 @@
 - import_tasks: linkconf.yml
   tags: linkconf
 
+  # - import_tasks: tmux.yml
+  #   tags: tmux
+
 - import_tasks: vim.yml
   tags: vim
 
@@ -11,11 +14,11 @@
 - import_tasks: solarized.yml
   tags: solarized
 
-- import_tasks: touchpad.yml
-  tags: touchpad
+  # - import_tasks: touchpad.yml
+  #   tags: touchpad
 
-- import_tasks: cron.yml
-  tags: cron
+  # - import_tasks: cron.yml
+  #   tags: cron
 
-- import_tasks: calibre.yml
-  tags: calibre,books
+  # - import_tasks: calibre.yml
+  #   tags: calibre,books

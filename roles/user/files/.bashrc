@@ -1,6 +1,10 @@
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
+# For Bash-specific configuration and enhancements
+# For functions/aliases, see ~/.bash_aliases
+# For modifying your terminal environment ($PATH, sourcing), see ~/.bash_profile
+
 set -P
 set -o pipefail
 
@@ -138,11 +142,6 @@ if [ -x /usr/bin/dircolors ]; then
 fi
 ### End prompt coloring ###
 
-# Alias definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_aliases, instead of adding them here directly.
-# See /usr/share/doc/bash-doc/examples in the bash-doc package.
-
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
@@ -157,14 +156,9 @@ fi
 ###############################################################################
 # CLI Completion Scripts
 ###############################################################################
-pre_complete=$(now)
 # Array of files within .completions
+pre_complete=$(now)
 COMPLETIONS=(~/.completions/*)
-source_files=(
-    ~/.dynrc
-    ~/.dockerrc
-)
-
 # Source all our files
 for i in "${source_files[@]}" "${COMPLETIONS[@]}"; do
     # echo "Sourcing $i ..."
@@ -173,7 +167,6 @@ for i in "${source_files[@]}" "${COMPLETIONS[@]}"; do
         . "$i"
     fi
 done
-
 # Google Cloud Platform
 GCLOUD_SDK="$HOME/jdb/.local/google-cloud-sdk"
 if [ -e "$GCLOUD_SDK" ]; then
@@ -184,14 +177,14 @@ if [ -e "$GCLOUD_SDK" ]; then
 	source "$GLOUC_SDK/completion.bash.inc"
 fi
 
+[[ -e "/home/${USER}/.oci/lib/python3.6/site-packages/oci_cli/bin/oci_autocomplete.sh" ]] && source "/home/${USER}/.oci/lib/python3.6/site-packages/oci_cli/bin/oci_autocomplete.sh"
+
 # printf "Sourced completions in %s\n" "$(time_since "$pre_complete")"
 
-# Set default permissions
-# User can do anything
-# Group can read + execute
-# Others can't do anything
-umask 027
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
-if [ -e ~/.secrets ]; then
-	source ~/.secrets
+# Haskell
+if hash stack 2>/dev/null; then
+	eval "$(stack --bash-completion-script stack)"
 fi
+

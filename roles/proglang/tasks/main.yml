@@ -1,10 +1,9 @@
 ---
-# Requires human interaction
-# - include: rust.yml
-# tags: rust
+- include: rust.yml
+  tags: rust
 
-- include: julia.yml
-  tags: julia
+# - include: julia.yml
+#   tags: julia
 
 - include: go.yml
   tags: go
@@ -12,5 +11,5 @@
 - include: haskell.yml
   tags: haskell
 
-- include: node.yml
-  tags: node
+  # - include: node.yml
+  #   tags: node

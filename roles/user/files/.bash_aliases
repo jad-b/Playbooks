@@ -3,7 +3,13 @@
 
 alias rals='. ~/.bash_aliases'
 alias rebash='. ~/.bash_profile'
-alias vals='vim ~/.bash_aliases'
+
+alias grep='rg'
+
+if hash nvim 2>/dev/null; then
+  alias vi=nvim
+  alias vim=nvim
+fi
 
 # System aliases
 alias ll='ls -alFhtA'
@@ -17,10 +23,6 @@ ipv4addr() {
 
 # Errors from this boot
 # journalctl -k -b -p err
-
-gtd() {
-  vim -O ~/Sync/@Home.md ~/Sync/@Anywhere.md
-}
 
 # Usage: cat file.txt | xclipd
 alias xclipd='xclip -selection clipboard'
@@ -52,11 +54,6 @@ joinString() {
 	local IFS="$1"
 	shift
 	printf "%s" "$*"
-}
-
-# Grep within specific files.
-findgrep() {
-    find . -name "$1" -exec grep -H "$2" {} \;
 }
 
 
@@ -236,6 +233,7 @@ work() {
   local results
   # Where your code|projects live
   local dev_dirs=(
+    "$HOME/Sync/src"
 		"$HOME/src/"
 		"$(pwd)"
     "$HOME"
@@ -247,8 +245,8 @@ work() {
   )
   # printf "Raw Results]\n%s\n\n" "${results[*]}"
 	# shellcheck disable=SC2086
-  IFS=$'\n' results=($(sort -u <<< "${results[*]}"))
-  unset IFS
+  #IFS=$'\n' results=($(sort -u <<< "${results[*]}"))
+  #unset IFS
   # printf "Results]\n%s\n\n" "${results[*]}"
   # printf "Top Result] %s\n" "${results[0]}"
 	if [[ -z ${results[0]// } ]]; then
@@ -430,7 +428,12 @@ alias ipy=ipython3
 ###############################################################################
 # Haskell
 ###############################################################################
-alias hask='stack ghci'
+shake() {
+  local shakefile="$(find $(git rev-parse --show-toplevel) -name Build.hs -type f \
+    | head -n1)"
+  cd "$(dirname ${shakefile})"
+  stack exec -- ./build.sh "$@"
+}
 
 ###############################################################################
 # Go

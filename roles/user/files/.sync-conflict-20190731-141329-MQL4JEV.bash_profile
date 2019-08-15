@@ -64,9 +64,9 @@ fi
 
 # Golang
 if [ -d /usr/local/go ]; then
+    export PATH="/usr/local/go/bin:${PATH}"
     export GOPATH="${HOME}"
     export GOMAXPROCS=$(nproc)
-    export PATH="/usr/local/go/bin:${GOPATH}/bin:${PATH}"
 fi
 
 # Julia
@@ -110,12 +110,6 @@ if [ -d ~/.cargo ]; then
     export PATH="${HOME}/.cargo/bin:${PATH}"
 fi
 
-# Nix
-NIX_PROFILE="~/.nix-profile/etc/profile.d/nix.sh"
-if [ -f "${NIX_PROFILE}" ]; then
-  . "${NIX_PROFILE}"
-fi
-
 # wait "$pending_pid"
 # cat tasks
 # ? How to close 'tasks'?
@@ -143,6 +137,3 @@ done
 umask 027
 
 echo "Week $(date +%W)"
-if [ -e /home/jdb/.nix-profile/etc/profile.d/nix.sh ]; then . /home/jdb/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
-
-export PATH="$HOME/.cargo/bin:$PATH"

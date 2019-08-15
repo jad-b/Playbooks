@@ -1,21 +1,4 @@
 ---
-- name: Add special Apt repos
-  apt_repository:
-    repo: "{{ item }}"
-    mode: 0664
-  with_items:
-    - 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main'
-    - 'deb [arch=amd64] https://updates.signal.org/desktop/apt {{ ansible_lsb.codename }} main'
-    - 'deb http://download.opensuse.org/repositories/home:/kozec/xUbuntu_16.04/ /'
-    - 'deb http://eddie.website/repository/apt stable main'
-    - 'deb https://apt.syncthing.net/ syncthing stable'
-    - 'ppa:jonathonf/python-3.6'
-    - 'ppa:jonathonf/vim'
-    - 'ppa:neovim-ppa/stable'
-    - 'ppa:nilarimogard/webupd8'
-    - 'ppa:stebbins/handbrake-releases'
-    - 'ppa:teejee2008/ppa'
-
 - name: Install Apt signing keys
   apt_key:
     url: "{{ item }}"
@@ -25,14 +8,37 @@
     - https://eddie.website/repository/keys/eddie_maintainer_gpg.key
     - https://syncthing.net/release-key.txt
     - https://updates.signal.org/desktop/apt/keys.asc
+    - https://www.virtualbox.org/download/oracle_vbox_2016.asc
+
+- name: Add special Apt repos
+  apt_repository:
+    repo: "{{ item }}"
+    mode: 0664
+  with_items:
+    - 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main'
+      # - 'deb [arch=amd64] https://updates.signal.org/desktop/apt xenial main'
+      # - 'deb http://download.opensuse.org/repositories/home:/kozec/xUbuntu_16.04/ /'
+    - 'deb http://eddie.website/repository/apt stable main'
+    - 'deb https://apt.syncthing.net/ syncthing stable'
+    - 'deb https://download.virtualbox.org/virtualbox/debian {{ ansible_lsb.codename }} contrib'
+    - 'ppa:jonathonf/python-3.6'
+      #     - 'ppa:jonathonf/vim'
+    - 'ppa:neovim-ppa/stable'
+    - 'ppa:nilarimogard/webupd8'
+    - 'ppa:teejee2008/ppa'
 
 - name: Install new packages
   apt:
-    name: "{{ item }}"
+    name: "{{ apps }}"
     state: latest
     update_cache: yes
-  with_items: "{{ apps }}"
 
 - name: dist-upgrade Apt packages
   apt:
     upgrade: dist
+
+- name: Install snaps
+  snap:
+    name:
+      - slack
+    classic: yes

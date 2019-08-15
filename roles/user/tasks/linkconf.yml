@@ -7,11 +7,13 @@
     group: "{{ ansible_user }}"
     state: link
     force: yes
+    follow: no
   with_items:
     - .bash_aliases
     - .bashrc
     - .bash_profile
     - .gitconfig
+    - .gitignore
     - .inputrc
     - .tmux.conf
     - .dockerrc

@@ -9,8 +9,12 @@
   become: yes
   when: stack_installed is failed
 
-- name: Install Glassgow-Haskell Compiler and Friends
-  command: "stack setup"
+- name: Create .stack dir
+  file:
+    path: "/home/{{ ansible_user }}/.stack"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    state: directory
 
 - name: Symlink Stack config
   file:
@@ -29,12 +33,3 @@
     group: "{{ ansible_user }}"
     state: link
     force: yes
-
-- name: Install expected packages
-  command: "stack {{ item }}"
-  loop:
-    - hlint
-    - hindent
-    - hdevtools
-    - hoogle
-

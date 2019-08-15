@@ -1,7 +1,8 @@
 ---
-# The rustup installer has an interactive command prompt.
-# This doesn't work. Yet.
-- expect:
-    command: /bin/bash -c "curl https://sh.rustup.rs -sSf | sh"
-    responses:
-      .*: "1"
+# 'bash -s -- ...' allows you to pass positional args to the piped script
+- shell: "curl https://sh.rustup.rs -sSf | bash -s -- -y"
+
+- command: "/home/{{ansible_user}}/.cargo/bin/cargo install {{item}}"
+  with_items:
+    - ripgrep
+  ignore_errors: true

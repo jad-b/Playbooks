@@ -1,13 +1,13 @@
 ---
 apps:
   # Packages affecting the OS and foundational functionality
+  - apt-file
   - anki
   - build-essential
   - compiz-plugins
   - compizconfig-settings-manager
   - git
   - google-chrome-stable
-  - handbrake-gtk
   - htop
   - jq
   - meld
@@ -15,7 +15,7 @@ apps:
   - network-manager-openvpn-gnome
   - powertop
   - redshift-gtk
-  - signal-desktop
+  # - signal-desktop
   - software-properties-common
   - syncthing
   - syncthing-gtk
@@ -27,7 +27,7 @@ apps:
   - ubuntu-developer-tools-center
   - ubuntu-restricted-extras
   - unity-tweak-tool
-  # - vim-gnome
+  - virtualbox-6.0
   - xclip
   - ukuu
   # Python system libraries
@@ -41,11 +41,9 @@ apps:
   - tk-dev
   - python-dev
   - python-pip
-  - python-software-properties
   - python3-pip
   - python3-dev
   - libncurses5-dev
-  - libzmq-dev
   - python3.6
   # Network Tools
   - iftop

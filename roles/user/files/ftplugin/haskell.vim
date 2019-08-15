@@ -1,28 +1,11 @@
 " Tab specific option
-set tabstop=8                   "A tab is 8 spaces
+set tabstop=2                   "A tab is 4 spaces
 set expandtab                   "Always uses spaces instead of tabs
-set softtabstop=4               "Insert 4 spaces when tab is pressed
-set shiftwidth=4                "An indent is 4 spaces
+set softtabstop=2               "Insert 2 spaces when tab is pressed
+set shiftwidth=2                "An indent is 2 spaces
 set shiftround                  "Round indent to nearest shiftwidth multiple
 
 " neovimhaskell/haskell-vim
-" Align 'then' two spaces after 'if'
-let g:haskell_indent_if = 2
-" Indent 'where' block two spaces under previous body
-let g:haskell_indent_before_where = 2
-" Allow a second case indent style (see haskell-vim README)
-let g:haskell_indent_case_alternative = 1
-" Only nest under 'let' if there's an equals sign
-let g:haskell_indent_let_no_in = 0
-
-" w0rp/ale
-let b:ale_linters = ['hlint', 'hdevtools']
-let b:ale_fixers = ['hlint', 'hindent']
-
-" vim-hindent
-" let b:hindent_on_save = 1
-
-" haskell-vim
 let b:haskell_enable_quantification = 1   " to enable highlighting of `forall`
 let b:haskell_enable_recursivedo = 1      " to enable highlighting of `mdo` and `rec`
 let b:haskell_enable_arrowsyntax = 1      " to enable highlighting of `proc`
@@ -30,6 +13,33 @@ let b:haskell_enable_pattern_synonyms = 1 " to enable highlighting of `pattern`
 let b:haskell_enable_typeroles = 1        " to enable highlighting of type roles
 let b:haskell_enable_static_pointers = 1  " to enable highlighting of `static`
 let b:haskell_backpack = 1                " to enable highlighting of backpack keywords
+" ~~~
+" Align 'then' two spaces after 'if'
+" let g:haskell_indent_if = 2
+" Indent 'where' block two spaces under previous body
+" let g:haskell_indent_before_where = 2
+" Allow a second case indent style (see haskell-vim README)
+" let g:haskell_indent_case_alternative = 1
+" Only nest under 'let' if there's an equals sign
+" let g:haskell_indent_let_no_in = 0
+" ~~~
+let g:haskell_indent_disable = 1
+set autoindent
+set nocindent
+set smartindent
+
+" hspec/hspec
+highlight link hspecDescribe Type
+highlight link hspecIt Identifier
+highlight link hspecDescription Comment
+
+" w0rp/ale
+let b:ale_linters = ['hlint', 'hdevtools']
+let b:ale_fixers = ['hlint', 'hindent']
+
+" vim-hindent
+let b:hindent_on_save = 1
+let g:hindent_indent_size = 2
 
 " vim-hdevtools
 " locally install stack per project
@@ -45,8 +55,9 @@ augroup hdevtoolsMaps
 augroup END
 
 " parsonsmatt/intero-neovim
+let b:intero_start_immediately = 0
 let b:intero_type_on_hover = 1
-let b:intero_use_neomake = 1
+let b:intero_use_neomake = 0
 augroup interoMaps
   au!
 
@@ -69,5 +80,5 @@ augroup interoMaps
   au FileType haskell nnoremap <leader>ist :InteroSetTargets<SPACE>
 
   " Automatically reload on save
-  au BufWritePost *.hs InteroReload
+  " au BufWritePost *.hs InteroReload
 augroup END

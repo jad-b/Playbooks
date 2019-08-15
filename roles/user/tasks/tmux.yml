@@ -1,0 +1,29 @@
+---
+- name: Create ~/src/github.com/tmux
+  file:
+    path: "/home/{{ ansible_user }}/src/github.com/tmux"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    recurse: yes
+
+- name: Clone tmux
+  git:
+    repo: https://github.com/tmux/tmux.git
+    dest: "/home/{{ ansible_user }}/src/github.com/tmux/tmux"
+
+- name: Autogen
+  command: ./autogen.sh
+  args:
+    chdir: "/home/{{ ansible_user }}/src/github.com/tmux/tmux"
+
+- name: Configure & make
+  shell: ./configure && make
+  args:
+    chdir: "/home/{{ ansible_user }}/src/github.com/tmux/tmux"
+
+- name: Install
+  command: make install
+  args:
+    chdir: "/home/{{ ansible_user }}/src/github.com/tmux/tmux"
+  become: yes

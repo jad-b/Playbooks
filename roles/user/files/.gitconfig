@@ -40,7 +40,7 @@
     s = status
     # Removes old branches that have been merged into master
     # "(^\*|master)" excludes current branch & master
-	sweep = !git branch --merged master | egrep -v \"(^\\*|master)\" | xargs git branch -d
+	sweep = !git branch --merged | egrep -v \"(^\\*|master)\" | xargs git branch -d
     unignore = update-index --no-assume-unchanged
     unstage = reset HEAD --
     untracked = ls-files --others --exclude-standard

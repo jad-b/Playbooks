@@ -1,86 +1,90 @@
-set nocompatible              " be iMproved, required filetype off                  " required
+set nocompatible              " be iMproved, required
 set t_Co=256
-
 set ff=unix
-" set the runtime path to include Vundle and initialize
-set runtimepath+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-" " alternatively, pass a path where Vundle should install plugins
-" "call vundle#begin('~/some/path/here')
-"
-" " let Vundle manage Vundle, required
-Plugin 'gmarik/Vundle.vim'
 
+if empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
+  silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+
+
+call plug#begin('~/.local/share/nvim/plugged')
 " ~~~~~~~~~~~~~~ Vim Itself ~~~~~~~~~~~~~~
+"
+Plug 'chrisbra/unicode.vim'
 " Colorscheme
-Plugin 'altercation/vim-colors-solarized'
+Plug 'altercation/vim-colors-solarized'
 " Netrw improvements
-Plugin 'tpope/vim-vinegar'
+Plug 'tpope/vim-vinegar'
 " gpg inside vim
-Plugin 'jamessan/vim-gnupg'
+Plug 'jamessan/vim-gnupg'
 " Commonly-used mappings
-Plugin 'tpope/vim-unimpaired'
+Plug 'tpope/vim-unimpaired'
 " Track the engine.
-Plugin 'SirVer/ultisnips'
+Plug 'SirVer/ultisnips'
 " Snippets are separated from the engine. Add this if you want them:
-Plugin 'honza/vim-snippets'
+Plug 'honza/vim-snippets'
 " Allows toggling between relative and absolute line numbers with C-n
-Plugin 'jeffkreeftmeijer/vim-numbertoggle'
+Plug 'jeffkreeftmeijer/vim-numbertoggle'
 " Improve the status bar
-Plugin 'bling/vim-airline'
+Plug 'bling/vim-airline'
 " List open buffers
-Plugin 'bling/vim-bufferline'
+Plug 'bling/vim-bufferline'
 " Tagbar
-Plugin 'majutsushi/tagbar'
-" Fuzzy search for files
-Plugin 'ctrlpvim/ctrlp.vim'
+Plug 'majutsushi/tagbar'
+" Fuzzy finder
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf.vim'
 " Commands for working with surrounding text objects
-Plugin 'tpope/vim-surround'
+Plug 'tpope/vim-surround'
 " Quick (un)comment commands
-Plugin 'scrooloose/nerdcommenter'
+Plug 'scrooloose/nerdcommenter'
 " Smarter code folding
-Plugin 'tmhedberg/SimpylFold'
+Plug 'tmhedberg/SimpylFold'
 " Display tmux status bar
-" Plugin 'edkolev/tmuxline.vim'
-Plugin 'tpope/vim-dispatch'
-Plugin 'neomake/neomake'
+" Plug 'edkolev/tmuxline.vim'
+Plug 'tpope/vim-dispatch'
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'neomake/neomake'
 
 " ~~~~~~~~~~~~~~ Language support ~~~~~~~~~~~~~~
-Plugin 'w0rp/ale'
-Plugin 'fatih/vim-go' " Go support
-Plugin 'chase/vim-ansible-yaml'
+" https://github.com/ElmCast/elm-vim
+Plug 'elmcast/elm-vim'
+Plug 'dense-analysis/ale'
+Plug 'fatih/vim-go' " Go support
+Plug 'chase/vim-ansible-yaml'
 " Python
-Plugin 'tell-k/vim-autopep8' " Python - automatic pep8 fixes
-Plugin 'vim-scripts/indentpython.vim' " Python PEP8 Indenting
-"Plugin 'klen/python-mode' " Too much!
-Plugin 'hashivim/vim-hashicorp-tools' " HCL format
-" Plugin 'JuliaEditorSupport/julia-vim' " Julia
-Plugin 'godlygeek/tabular' " Quickly align text
-Plugin 'plasticboy/vim-markdown' " Markdown
-Plugin 'cespare/vim-toml' " TOML
-" Plugin 'derekwyatt/vim-scala' " Scala
-Plugin 'rust-lang/rust.vim'
+Plug 'tell-k/vim-autopep8' " Python - automatic pep8 fixes
+Plug 'vim-scripts/indentpython.vim' " Python PEP8 Indenting
+"Plug 'klen/python-mode' " Too much!
+Plug 'hashivim/vim-hashicorp-tools' " HCL format
+" Plug 'JuliaEditorSupport/julia-vim' " Julia
+Plug 'godlygeek/tabular' " Quickly align text
+Plug 'plasticboy/vim-markdown' " Markdown
+Plug 'cespare/vim-toml' " TOML
+" Plug 'derekwyatt/vim-scala' " Scala
+Plug 'rust-lang/rust.vim'
 " Haskell
-Plugin 'bitc/vim-hdevtools'
-Plugin 'neovimhaskell/haskell-vim'
-Plugin 'alx741/vim-hindent'
-Plugin 'parsonsmatt/intero-neovim'
+Plug 'bitc/vim-hdevtools'
+Plug 'neovimhaskell/haskell-vim'
+Plug 'alx741/vim-hindent'
+Plug 'ndmitchell/ghcid', { 'rtp': 'plugins/nvim' }
+Plug 'hspec/hspec'
+" Plug 'parsonsmatt/intero-neovim'
 
 " ~~~~~~~~~~~~~~ Front-end Development ~~~~~~~~~~~~~~
 " Close HTML/XML tags with ctrl-_
-Plugin 'vim-scripts/closetag.vim'
-Plugin 'hail2u/vim-css3-syntax'
+Plug 'vim-scripts/closetag.vim'
+Plug 'hail2u/vim-css3-syntax'
 " JavaScript Syntax
-Plugin 'pangloss/vim-javascript'
+Plug 'pangloss/vim-javascript'
 " TypeScript
-" Plugin 'leafgarland/typescript-vim'
-Plugin 'HerringtonDarkholme/yats.vim'
-Plugin 'Quramy/tsuquyomi'
+" Plug 'leafgarland/typescript-vim'
+Plug 'HerringtonDarkholme/yats.vim'
+Plug 'Quramy/tsuquyomi'
 
-
-" All of your Plugins must be added before the following line
-call vundle#end()            " required
-
+call plug#end()
 
 if has("multi_byte")
   if &termencoding == ""
@@ -94,12 +98,25 @@ endif
 " ------------------------------------------------------------------------------
 "  Plugin Configuration
 " ------------------------------------------------------------------------------
-" cltrp
-let g:ctrlp_custom_ignore = {
-  \ 'dir': '\v[\/]\node_modules$',
-  \ }
+"  ALE
+nmap <C-Up> <Plug>(ale_previous_wrap)
+nmap <C-Down> <Plug>(ale_next_wrap)
+let g:ale_set_quickfix = 1
 
+" ansible
 let g:ansible_options = {'ignore_blank_lines': 0}
+
+"  deoplete
+let g:deoplete#enable_at_startup = 1
+call deoplete#custom#option('sources', {
+\ '_': ['ale'],
+\})
+
+" fzf
+set rtp+=~/src/github.com/junegunn/fzf
+nnoremap <C-p> :FZF <CR>
+nnoremap <leader>f :FZF ~<CR>
+nnoremap <leader>g :FZF system("git rev-parse --show-toplevel")<CR>
 
 " vim-airline
 " Enable the list of buffers
@@ -139,6 +156,7 @@ let g:hdevtools_stack = 1
 nmap <F8> :TagbarToggle<CR>
 
 " ---------- vim-go ----------
+let g:go_version_warning = 0
 " Run :Lint to execute golint on the current file
 set rtp+=$GOPATH/src/github.com/golang/lint/misc/vim
 " Run commands, such as go run with <leader>r for the current file or go build
@@ -162,35 +180,8 @@ au FileType go nmap <Leader>e <Plug>(go-rename)
 " Enable goimports to automatically insert import paths instead of gofmt:
 
 " -------- linting --------
-"  ALE
-nmap <C-Up> <Plug>(ale_previous_wrap)
-nmap <C-Down> <Plug>(ale_next_wrap)
-let g:ale_set_quickfix = 1
-" ALE - Python
-let g:ale_python_pylint_executable = 'python3'   " or 'python' for Python 2
-let g:ale_python_pylint_options = '-rcfile ~/.pylintrc'
-let g:ale_python_flake8_executable = 'python3'
-let g:ale_python_flake8_options = '-m flake8'
-
-" Python-mode
-" let g:pymode_doc = 0
-" Disable python-mode's syntax checks in favor of Syntastic's
-" let g:pymode_lint_write = 0
-"
-" ---------- vim-markdown ----------
-let g:vim_markdown_math = 1
-let g:vim_markdown_toml_frontmatter = 1
-" Auto-indent lists by 2 spaces
-let g:vim_markdown_new_list_item_indent = 2
-" Follow markdown links with the '.md' extension
-let g:vim_markdown_no_extensions_in_markdown = 1
-" Auto-save current file before following link
-let g:vim_markdown_autowrite = 1
 
 " ------------------------------------------------------------------------------
-filetype plugin indent on
-" filetype indent on
-syntax on
 set omnifunc=syntaxcomplete#Complete
 " Converts italicized,bold,etc. into the actual appearance.
 set conceallevel=2
@@ -224,13 +215,16 @@ set cmdheight=2
 " ----------------------------------------
 " Uppercase letters triggers case sensitivity
 set smartcase
+" Tab complete by LCS, then fullest match (:help wildmode)
+" src: https://stackoverflow.com/a/11583850
+set wildmode=list:longest,full
 " Normal mode
 nnoremap <C-j> :m .+1<CR>==
 nnoremap <C-k> :m .-2<CR>==
 
 " Insert mode
-inoremap <C-j> <ESC>:m .+1<CR>==gi
-inoremap <C-k> <ESC>:m .-2<CR>==gi
+" inoremap <C-j> <ESC>:m .+1<CR>==gi
+" inoremap <C-k> <ESC>:m .-2<CR>==gi
 
 " Visual mode
 vnoremap <C-j> :m '>+1<CR>gv=gv
@@ -246,6 +240,17 @@ nnoremap <C-J> <C-W><C-J>
 nnoremap <C-K> <C-W><C-K>
 nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
+
+" Alt-{hjkl} for navigating panes
+" <C-\><C-n> is neovim's escape sequence
+tnoremap <A-h> <C-\><C-n><C-w>h
+tnoremap <A-j> <C-\><C-n><C-w>j
+tnoremap <A-k> <C-\><C-n><C-w>k
+tnoremap <A-l> <C-\><C-n><C-w>l
+nnoremap <A-h> <C-w>h
+nnoremap <A-j> <C-w>j
+nnoremap <A-k> <C-w>k
+nnoremap <A-l> <C-w>l
 
 set splitright
 set splitbelow
@@ -295,7 +300,7 @@ set showmode
 "  Work around of vim-vinegar causing netrw buffers to never die
 autocmd FileType netrw setl bufhidden=wipe
 "  Change current directory to currently open file
-autocmd BufEnter * silent! lcd %:p:h
+" autocmd BufEnter * silent! lcd %:p:h
 
 " Remove trailing whitespace
 fun! <SID>StripTrailingWhitespaces()
@@ -308,7 +313,7 @@ autocmd BufWritePre * :call <SID>StripTrailingWhitespaces()
 
 autocmd Filetype yaml,html,htmldjango,ruby,kivy,tmpl,css,hbs,scss,sh setlocal autoindent tabstop=2 shiftwidth=2 expandtab
 autocmd BufRead,BufNewFile *.ts set filetype=typescript
-autocmd BufRead,BufNewFile *.conf set filetype=conf
+autocmd BufRead,BufNewFile *.conf set filetype=conf autoindent tabstop=2 shiftwidth=2 expandtab
 autocmd BufRead,BufNewFile *.scss set filetype=css
 autocmd BufRead,BufNewFile *.deploy set filetype=yaml
 autocmd BufRead,BufNewFile *.yml set filetype=yaml
@@ -323,7 +328,7 @@ autocmd BufNewFile,BufRead *.jl  set filetype=julia
 :iabbrev </ </<C-X><C-O>
 
 " Turn on spell-checking in text files
-au BufRead,BufNewFile *.md,*.txt,*.rst,*.tf setlocal sw=2 ts=2 expandtab tw=0
+au BufRead,BufNewFile *.txt,*.rst setlocal sw=2 ts=2 expandtab tw=0
 "
 " Auto-recognize groovy scripts by the shebang
 if did_filetype() " Already recognized filetype
@@ -394,10 +399,6 @@ nnoremap gn :bn<CR>
 nnoremap gl :ls<CR>
 nnoremap gb :ls<CR>:b
 
-" delete without yanking
-nnoremap <leader>d "_d
-vnoremap <leader>d "_d
-
 " replace currently selected text with default register with yanking it
 vnoremap <leader>p "_dP
 
@@ -408,7 +409,7 @@ noremap <C-c> :noh<return>
 " source $MYVIMRC
 :nmap <Leader>s :source $MYVIMRC
 " Open vimrc for editing
-:nmap <Leader>v :e $MYVIMRC
+:nmap <Leader>v :e ~/.vimrc
 
 " Use 'q' to close netrw window
 autocmd FileType netrw nnoremap q :bd
