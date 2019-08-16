@@ -33,3 +33,6 @@
     group: "{{ ansible_user }}"
     state: link
     force: yes
+
+- name: Install expected tools
+  command: "stack build --copy-compiler-tool {{ haskell.tools | join(' ') }}"

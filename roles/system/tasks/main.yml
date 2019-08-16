@@ -13,3 +13,7 @@
     state: directory
     path: "/var/log/journal"
   become: yes
+
+- name: Syncthing
+  tags: syncthing
+  become: yes

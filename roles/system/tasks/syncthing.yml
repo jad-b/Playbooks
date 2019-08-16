@@ -1,0 +1,6 @@
+---
+- name: Enable syncthing service for user
+  systemd:
+    name: "syncthing@{{ ansible_user }}.service"
+    state: started
+    enabled: yes

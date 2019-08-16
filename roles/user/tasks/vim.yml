@@ -1,12 +1,7 @@
 # Setup Vim just the way I like it.
 
-- name: Install Vundle
-  git:
-    repo: https://github.com/VundleVim/Vundle.vim.git
-    dest: ~/.vim/bundle/Vundle.vim
-
 - name: Install vim plugins
-  command: vim -E -s -c "source ~/.vimrc" +PluginUpdate +qall
+  command: nvim +PluginUpdate +qall
   ignore_errors: true
 
 - name: Symlink local Vim configs
@@ -32,4 +27,4 @@
     follow: no
   become: yes
   loop:
-    - { src: "nvim_tmpfiles.conf", dst: "/etc/tmpfiles.d/nvim.conf" }
+    - {src: "nvim_tmpfiles.conf", dst: "/etc/tmpfiles.d/nvim.conf"}

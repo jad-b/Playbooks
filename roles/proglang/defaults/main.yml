@@ -6,3 +6,10 @@ julia:
 go:
   version: 1.12.6
   dir: /usr/local/go
+
+haskell:
+  tools:
+    - ghcid
+    - hdevtools
+    - hlint
+    - shake
