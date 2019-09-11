@@ -38,8 +38,13 @@ let b:ale_linters = ['hlint', 'hdevtools']
 let b:ale_fixers = ['hlint', 'hindent']
 
 " vim-hindent
-let b:hindent_on_save = 1
+let b:hindent_on_save = 0
 let g:hindent_indent_size = 2
+au FileType haskell nnoremap <silent> <leader>ph :Hindent<CR>
+
+" stylish-haskell
+let g:stylishask_on_save = 0
+au FileType haskell nnoremap <silent> <leader>ps :Stylishask<CR>
 
 " vim-hdevtools
 " locally install stack per project

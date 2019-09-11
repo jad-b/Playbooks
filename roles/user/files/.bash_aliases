@@ -16,6 +16,11 @@ alias ll='ls -alFhtA'
 alias la='ls -A'
 alias l='ls -CF'
 
+fixperms() {
+  chmod 0640 $(find . -type f)
+  chmod 0755 $(find . -type d)
+}
+
 # ipv4 address for $1
 ipv4addr() {
     ip -4 addr show dev "$1" | sed -n 's/^ *inet *\([.0-9]\+\).*/\1/p'
@@ -95,7 +100,7 @@ sshx () {
       ssh-keygen -E md5 -lf "$2"
       ;;
     public-key)
-      ssh-key -y -f "$2"
+      ssh-keygen -y -f "$2"
       ;;
     *)
       echo "Unknown command"

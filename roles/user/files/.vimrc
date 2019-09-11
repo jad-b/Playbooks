@@ -28,7 +28,7 @@ Plug 'honza/vim-snippets'
 " Allows toggling between relative and absolute line numbers with C-n
 Plug 'jeffkreeftmeijer/vim-numbertoggle'
 " Improve the status bar
-Plug 'bling/vim-airline'
+Plug 'vim-airline/vim-airline'
 " List open buffers
 Plug 'bling/vim-bufferline'
 " Tagbar
@@ -68,9 +68,10 @@ Plug 'rust-lang/rust.vim'
 " Haskell
 Plug 'bitc/vim-hdevtools'
 Plug 'neovimhaskell/haskell-vim'
-Plug 'alx741/vim-hindent'
+Plug 'chrisdone/vim-hindent'
 Plug 'ndmitchell/ghcid', { 'rtp': 'plugins/nvim' }
 Plug 'hspec/hspec'
+Plug 'eagletmt/ghcmod-vim'
 " Plug 'parsonsmatt/intero-neovim'
 
 " ~~~~~~~~~~~~~~ Front-end Development ~~~~~~~~~~~~~~
