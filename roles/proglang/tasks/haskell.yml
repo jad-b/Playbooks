@@ -2,11 +2,11 @@
 - name: Is Stack installed?
   shell: "hash stack 2>/dev/null"
   register: stack_installed
-  ignore_errors: True
+  ignore_errors: true
 
 - name: Install Stack
   shell: "curl -sSL https://get.haskellstack.org/ | sh"
-  become: yes
+  become: true
   when: stack_installed is failed
 
 - name: Create .stack dir
@@ -23,7 +23,7 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     state: link
-    force: yes
+    force: true
 
 - name: Symlink .ghci
   file:
@@ -32,7 +32,19 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     state: link
-    force: yes
+    force: true
+
+- name: Symlink Stylish Haskell config
+  file:
+    src: "{{ playbook_dir }}/roles/proglang/files/.stylish-haskell.yaml"
+    dest: "/home/{{ ansible_user }}/.stylish-haskell.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    state: link
+    force: true
 
 - name: Install expected tools
-  command: "stack build --copy-compiler-tool {{ haskell.tools | join(' ') }}"
+  shell: "source ~/.bash_aliases && h tools"
+  args:
+    executable: /bin/bash
+  # command: "stack build --copy-compiler-tool {{ haskell.tools | join(' ') }}"

@@ -4,12 +4,6 @@ julia:
   dir: "/home/{{ ansible_user }}/julia"
 
 go:
-  version: 1.12.6
+  # https://golang.org/dl/
+  version: 1.12.9
   dir: /usr/local/go
-
-haskell:
-  tools:
-    - ghcid
-    - hdevtools
-    - hlint
-    - shake

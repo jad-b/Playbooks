@@ -454,6 +454,28 @@ shake() {
   stack exec -- ./build.sh "$@"
 }
 
+h() {
+  local bins=(
+    stylish-haskell
+    ghcid
+    hdevtools
+    hlint
+    hoogle
+    shake
+  )
+
+  case "$1" in
+    tools)
+      echo "Installing tooling..."
+      stack build --copy-compiler-tool "${bins[@]}"
+      ;;
+    *)
+      echo "Unknown command $@"
+      return 1
+      ;;
+  esac
+}
+
 ###############################################################################
 # Go
 ###############################################################################

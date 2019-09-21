@@ -29,6 +29,7 @@ Plug 'honza/vim-snippets'
 Plug 'jeffkreeftmeijer/vim-numbertoggle'
 " Improve the status bar
 Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
 " List open buffers
 Plug 'bling/vim-bufferline'
 " Tagbar
@@ -66,12 +67,13 @@ Plug 'cespare/vim-toml' " TOML
 " Plug 'derekwyatt/vim-scala' " Scala
 Plug 'rust-lang/rust.vim'
 " Haskell
-Plug 'bitc/vim-hdevtools'
+" Plug 'bitc/vim-hdevtools'
 Plug 'neovimhaskell/haskell-vim'
-Plug 'chrisdone/vim-hindent'
+" Plug 'chrisdone/vim-hindent'
 Plug 'ndmitchell/ghcid', { 'rtp': 'plugins/nvim' }
 Plug 'hspec/hspec'
-Plug 'eagletmt/ghcmod-vim'
+" Plug 'eagletmt/ghcmod-vim'
+Plug 'alx741/vim-stylishask'
 " Plug 'parsonsmatt/intero-neovim'
 
 " ~~~~~~~~~~~~~~ Front-end Development ~~~~~~~~~~~~~~
@@ -99,10 +101,21 @@ endif
 " ------------------------------------------------------------------------------
 "  Plugin Configuration
 " ------------------------------------------------------------------------------
+"  vim-airline
+let g:airline_theme='solarized'
+" Enable the list of buffers
+let g:airline#extensions#tabline#enabled = 1
+" Show just the filename
+let g:airline#extensions#tabline#fnamemod = ':t'
+
 "  ALE
-nmap <C-Up> <Plug>(ale_previous_wrap)
-nmap <C-Down> <Plug>(ale_next_wrap)
-let g:ale_set_quickfix = 1
+" Jump between errors
+" nmap <C-[> <Plug>(ale_previous_wrap)
+" nmap <C-]> <Plug>(ale_next_wrap)
+let g:ale_set_quickfix = 0
+" Display error info in Airline status bar
+let g:airline#extensions#ale#enabled = 1
+let g:ale_fix_on_save = 1
 
 " ansible
 let g:ansible_options = {'ignore_blank_lines': 0}
@@ -118,12 +131,6 @@ set rtp+=~/src/github.com/junegunn/fzf
 nnoremap <C-p> :FZF <CR>
 nnoremap <leader>f :FZF ~<CR>
 nnoremap <leader>g :FZF system("git rev-parse --show-toplevel")<CR>
-
-" vim-airline
-" Enable the list of buffers
-let g:airline#extensions#tabline#enabled = 1
-" Show just the filename
-let g:airline#extensions#tabline#fnamemod = ':t'
 
 " UltiSnips setting
 " mae vim recognizing snippets dir
@@ -418,3 +425,10 @@ autocmd FileType netrw nnoremap q :bd
 " Look for a tags file going up to root
 set tags=./tags;/
 :nmap <Leader>cr :!ctags -R . $(python -c "import os, sys; print(' '.join('{}'.format(d) for d in sys.path if os.path.isdir(d)))")<CR>
+
+" Load all plugins now.
+" Plugins need to be added to runtimepath before helptags can be generated.
+packloadall
+" Load all of the helptags now, after plugins have been loaded.
+" All messages and errors will be ignored.
+silent! helptags ALL

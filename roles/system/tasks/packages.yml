@@ -8,6 +8,7 @@
     - https://eddie.website/repository/keys/eddie_maintainer_gpg.key
     - https://syncthing.net/release-key.txt
     - https://updates.signal.org/desktop/apt/keys.asc
+    - https://wire-app.wire.com/linux/releases.key
     - https://www.virtualbox.org/download/oracle_vbox_2016.asc
 
 - name: Add special Apt repos
@@ -16,13 +17,10 @@
     mode: 0664
   with_items:
     - 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main'
-      # - 'deb [arch=amd64] https://updates.signal.org/desktop/apt xenial main'
-      # - 'deb http://download.opensuse.org/repositories/home:/kozec/xUbuntu_16.04/ /'
+    - 'deb [arch=amd64] https://wire-app.wire.com/linux/debian stable main'
     - 'deb http://eddie.website/repository/apt stable main'
     - 'deb https://apt.syncthing.net/ syncthing stable'
     - 'deb https://download.virtualbox.org/virtualbox/debian {{ ansible_lsb.codename }} contrib'
-    - 'ppa:jonathonf/python-3.6'
-      #     - 'ppa:jonathonf/vim'
     - 'ppa:neovim-ppa/stable'
     - 'ppa:nilarimogard/webupd8'
     - 'ppa:teejee2008/ppa'

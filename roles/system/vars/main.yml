@@ -28,8 +28,9 @@ apps:
   - ubuntu-restricted-extras
   - unity-tweak-tool
   - virtualbox-6.0
-  - xclip
   - ukuu
+  - wire-desktop
+  - xclip
   # Python system libraries
   - libbz2-dev
   - libc6-dev
@@ -39,15 +40,16 @@ apps:
   - libsqlite3-dev
   - libssl-dev
   - tk-dev
-  - python-dev
-  - python-pip
-  - python3-pip
-  - python3-dev
   - libncurses5-dev
-  - python3.6
   # Network Tools
   - iftop
   - netcat
   - nmap
   - traceroute
   - tshark
+
+python:
+  - python-dev
+  - python-pip
+  - python3-pip
+  - python3-dev
