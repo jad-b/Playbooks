@@ -3,7 +3,7 @@ julia:
   version: 0.6.0
   dir: "/home/{{ ansible_user }}/julia"
 
+# https://golang.org/dl/
 go:
-  # https://golang.org/dl/
-  version: 1.12.9
+  version: 1.13.1
   dir: /usr/local/go

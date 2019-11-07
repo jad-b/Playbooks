@@ -64,9 +64,9 @@ fi
 
 # Golang
 if [ -d /usr/local/go ]; then
-    export PATH="/usr/local/go/bin:${PATH}"
     export GOPATH="${HOME}"
     export GOMAXPROCS=$(nproc)
+    export PATH="/usr/local/go/bin:${GOPATH}/bin:${PATH}"
 fi
 
 # Julia

@@ -48,6 +48,7 @@ Plug 'tmhedberg/SimpylFold'
 Plug 'tpope/vim-dispatch'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'neomake/neomake'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 " ~~~~~~~~~~~~~~ Language support ~~~~~~~~~~~~~~
 " https://github.com/ElmCast/elm-vim
@@ -420,7 +421,7 @@ noremap <C-c> :noh<return>
 :nmap <Leader>v :e ~/.vimrc
 
 " Use 'q' to close netrw window
-autocmd FileType netrw nnoremap q :bd
+" autocmd FileType netrw nnoremap q :bd
 
 " Look for a tags file going up to root
 set tags=./tags;/
