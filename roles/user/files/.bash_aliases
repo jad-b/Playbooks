@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -eu
 # vim: filetype=sh
 
 alias rals='. ~/.bash_aliases'
@@ -10,6 +10,10 @@ if hash nvim 2>/dev/null; then
   alias vi=nvim
   alias vim=nvim
 fi
+
+vzf() {
+  vim "$(fzf)"
+}
 
 # System aliases
 alias ll='ls -alFhtA'
@@ -34,17 +38,6 @@ alias xclipd='xclip -selection clipboard'
 
 # Overrides the 'open' command
 alias open='xdg-open'
-
-detectGoPkg() {
-	local gosrc=$HOME/go/src/
-	if [[ $PWD == $gosrc* ]]; then
-		export GOPKG=${PWD#$gosrc}
-		# echo "GOPKG=${PWD#$gosrc}"
-	else
-		unset GOPKG
-		# echo "Unsetting GOPKG"
-	fi
-}
 
 cd() {
 	builtin cd "$@"
@@ -105,6 +98,24 @@ sshx () {
     *)
       echo "Unknown command"
       ;;
+    esac
+}
+
+sec() {
+  case "$1" in
+    md5)
+      case "$2" in
+        oci)
+          openssl rsa -pubout -outform DER -in "$3" | openssl md5 -c
+          ;;
+        yubi)
+          pkcs11-tool --read-object --type pubkey --label 'PIV AUTH pubkey' | openssl dgst -md5 -c
+          ;;
+        *)
+          ssh-keygen -E md5 -lf "$2"
+          ;;
+      esac
+    ;;
   esac
 }
 
@@ -278,23 +289,6 @@ work() {
 }
 
 ###############################################################################
-# Open a file for writing
-#
-# TODO(2017Feb24,jdb):
-#   - Case-insensitive search
-#   - Fuzzy string matching using heuristics and edit distance
-#
-# Arguments:
-#   FILENAME: Name of file to open.
-#   DIRECTORY: Parent directory to search within.
-###############################################################################
-pen() {
-	local FILENAME=${1}
-	local DIRECTORY=${1:-.}
-
-}
-
-###############################################################################
 # List the ten largest file/directories
 #
 # Globals:
@@ -320,57 +314,8 @@ dateme(){
 	date +"%Y%b%d"
 }
 
-
-###############################################################################
-# Creates a Jekyll-accepted post file.
-###############################################################################
-jpost(){
-    BLOGDIR="$HOME/Dropbox/dev/most_resistance/categories"
-    DIRPATH="$BLOGDIR/$CATEGORY/_posts"
-	# Display help message
-    if [ $# -eq 0 ]; then
-		cat <<EOF
-Usage:
-	jpost <category> <post name with spaces>
-
-	Available categories:
-	$(find "$BLOGDIR" -type f -maxdepth=1 | tr '\n' ' ')
-EOF
-        return 0
-    fi
-
-    # Extract target category
-    CATEGORY="$1"
-    shift 1
-
-    # Put hyphens in the title
-    HYPHENATED_TITLE="$(echo "$@" | tr ' ' '-')"
-    FILENAME="$(date +%F)-$HYPHENATED_TITLE.md"
-    echo "Creating $CATEGORY/$FILENAME"
-
-    if [ ! -d "$DIRPATH" ]; then  # Create the thing.
-        # Create category &| _posts dir
-        mkdir -p "$DIRPATH"
-        # Stream and modify our new category's index.html
-        sed  's/^category: \w\+$/category: '"$CATEGORY"'/g' \
-            "$BLOGDIR/programming/index.html" > "$BLOGDIR/$CATEGORY/index.html"
-    fi
-    FILEPATH="$DIRPATH/$FILENAME"
-    cat > "$FILEPATH" <<EOF
----
-layout: page
-title: $@
-category: $CATEGORY
----
-EOF
-    # Open file in vim
-    vim "$FILEPATH"
-}
-
-
 # Make mount command output pretty and human readable format
 alias mount='mount |column -t'
-
 
 ###############################################################################
 # Display a directory tree
@@ -414,9 +359,7 @@ diskfree(){
     df -h | grep /dev/sda1 | awk '{print $5}'
 }
 
-###############################################################################
 # Search and replace on a file regex.
-###############################################################################
 snr() {
     if [[ -n ${DRY_RUN+x} ]]; then  # Do a dry run
         find . -name "$1" -type f -exec sed -n "s/$2/$3/gp" {} \;
@@ -480,17 +423,24 @@ h() {
 # Go
 ###############################################################################
 
-###############################################################################
+detectGoPkg() {
+	local gosrc=$HOME/go/src/
+	if [[ $PWD == $gosrc* ]]; then
+		export GOPKG=${PWD#$gosrc}
+		# echo "GOPKG=${PWD#$gosrc}"
+	else
+		unset GOPKG
+		# echo "Unsetting GOPKG"
+	fi
+}
+
 # Run 'goimports' on all *.go files in directory.
-###############################################################################
 gimps(){
     find ! -readable -prune -name '*.go'  -exec goimports -w {} \;
 }
 
-###############################################################################
 # Print the Go package for the cwd.
 # Example: ~/go/src/github.com/jad-b/repo => github.com/jad-b/repo
-###############################################################################
 gopkg() {
 	local cwd=$(pwd)
 	if [[ $cwd == ~/go/src* ]]; then
@@ -498,18 +448,12 @@ gopkg() {
 	fi
 }
 
-
+###############################################################################
 # Git
+###############################################################################
 alias g="git"
 alias push="git push"
 alias pull="git pull"
-
-# Configure repo to be me
-git-me() {
-	git config user.email j.american.db@gmail.com
-	git config user.name "Jeremy Dobbins-Bucklad"
-	git config user.signingkey E180BC0A
-}
 
 # Upgrade every Git repo under a directory name using 'git-up'
 gitemup() {
@@ -523,23 +467,6 @@ gitemup() {
 
 # Terraform
 alias tf='terraform'
-
-# Vagrant
-alias valias='grep vagrant ~/.bash_aliases'
-alias v='vagrant'
-alias vb='vagrant box'
-alias vbl='vagrant box list'
-alias vdes='vagrant destroy -f'
-alias vhalt='vagrant halt'
-alias vup='vagrant up'
-alias vpro='vagrant provision'
-alias vre='vagrant reload'
-alias vsh='vagrant ssh'
-alias vgs='vagrant global-status'
-alias vs='vagrant status'
-
-# Make a base64 encoded secret
-mksecret(){ echo "$1" | openssl dgst -binary -sha1 | openssl base64; }
 
 # GPG
 gpgctl() {
@@ -594,37 +521,40 @@ tls() {
     local SSL_CSR=csr.pem
     local SSL_CERT=server.crt
     case "$1" in
-        view) # Display a cert, even in encoded .pem format.
-            openssl x509 -in "$2" -text -noout
-            ;;
-		view-bundle) # Display a concatenated list of certs in a file
-			openssl crl2pkcs7 -nocrl -certfile "$2" |\
-			openssl pkcs7 -print_certs -text -noout
-			;;
-        server) # Open a TLS connection to a live server; $2 should be 'host:port'
-            openssl s_client -connect "$2:${3:-443}" -showcerts -servername "$2"
-            ;;
-		compare) # Check a public cert and private key for compatibility
-			openssl x509 -noout -modulus -in "$2" | openssl md5;\
-			openssl rsa -noout -modulus -in "$3" | openssl md5
-			# Pipe through 'uniq' for a quick view of any differences
-			;;
-        key) # Generate a TLS key
-            KEY=${2:-$SSL_PRIVATE_KEY};
-            STRENGTH=${3:-2048};
-            openssl genrsa "$STRENGTH" > "$KEY"
-            ;;
-        csr) # Generate a Certificate Signing Request
-            KEY=${2:-$SSL_PRIVATE_KEY}
-            CSR=${3:-$SSL_CSR}
-            openssl req -new -key "$KEY" -out "$CSR"
-            ;;
-        cert) # Generate a self-signed TLS certificate
-            KEY=${2:-$SSL_PRIVATE_KEY}
-            CSR=${3:-$SSL_CSR}
-            CERT=${4:-$SSL_CERT}
-            openssl x509 -req -days 365 -signkey "$KEY" -in "$CSR" -out "$CERT"
-            ;;
+      view) # Display a cert, even in encoded .pem format.
+          openssl x509 -in "$2" -text -noout
+          ;;
+      view-bundle) # Display a concatenated list of certs in a file
+        openssl crl2pkcs7 -nocrl -certfile "$2" |\
+        openssl pkcs7 -print_certs -text -noout
+        ;;
+          server) # Open a TLS connection to a live server; $2 should be 'host:port'
+              openssl s_client -connect "$2:${3:-443}" -showcerts -servername "$2"
+              ;;
+      compare) # Check a public cert and private key for compatibility
+        openssl x509 -noout -modulus -in "$2" | openssl md5;\
+        openssl rsa -noout -modulus -in "$3" | openssl md5
+        # Pipe through 'uniq' for a quick view of any differences
+        ;;
+      san) # View a certificate's SAN
+        openssl s_client -connect "$2:443" | openssl x509 -noout -text | grep DNS:
+        ;;
+      key) # Generate a TLS key
+          KEY=${2:-$SSL_PRIVATE_KEY};
+          STRENGTH=${3:-2048};
+          openssl genrsa "$STRENGTH" > "$KEY"
+          ;;
+      csr) # Generate a Certificate Signing Request
+          KEY=${2:-$SSL_PRIVATE_KEY}
+          CSR=${3:-$SSL_CSR}
+          openssl req -new -key "$KEY" -out "$CSR"
+          ;;
+      cert) # Generate a self-signed TLS certificate
+          KEY=${2:-$SSL_PRIVATE_KEY}
+          CSR=${3:-$SSL_CSR}
+          CERT=${4:-$SSL_CERT}
+          openssl x509 -req -days 365 -signkey "$KEY" -in "$CSR" -out "$CERT"
+          ;;
     esac
 }
 

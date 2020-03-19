@@ -21,10 +21,6 @@ Plug 'tpope/vim-vinegar'
 Plug 'jamessan/vim-gnupg'
 " Commonly-used mappings
 Plug 'tpope/vim-unimpaired'
-" Track the engine.
-" Plug 'SirVer/ultisnips'
-" Snippets are separated from the engine. Add this if you want them:
-" Plug 'honza/vim-snippets'
 " Allows toggling between relative and absolute line numbers with C-n
 Plug 'jeffkreeftmeijer/vim-numbertoggle'
 " Improve the status bar
@@ -54,7 +50,7 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 " https://github.com/ElmCast/elm-vim
 Plug 'elmcast/elm-vim'
 Plug 'dense-analysis/ale'
-Plug 'fatih/vim-go' " Go support
+Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' } " Go support
 Plug 'chase/vim-ansible-yaml'
 " Python
 Plug 'tell-k/vim-autopep8' " Python - automatic pep8 fixes
@@ -70,7 +66,7 @@ Plug 'rust-lang/rust.vim'
 " Haskell
 Plug 'neovimhaskell/haskell-vim'
 " Plug 'ndmitchell/ghcid', { 'rtp': 'plugins/nvim' }
-" Plug 'hspec/hspec'
+Plug 'GEverding/vim-hocon'
 
 " ~~~~~~~~~~~~~~ Front-end Development ~~~~~~~~~~~~~~
 " Close HTML/XML tags with ctrl-_
@@ -146,9 +142,6 @@ let g:netrw_winsize=30
 
 " Show docstrings for folded code
 " let g:SimpylFold_docstring_preview=1
-
-" vim-hdevtools
-let g:hdevtools_stack = 1
 
 " ---------- tag-bar ----------
 nmap <F8> :TagbarToggle<CR>

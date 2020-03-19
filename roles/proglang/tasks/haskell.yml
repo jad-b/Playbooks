@@ -43,8 +43,11 @@
     state: link
     force: true
 
-- name: Install expected tools
-  shell: "source ~/.bash_aliases && h tools"
-  args:
-    executable: /bin/bash
-  # command: "stack build --copy-compiler-tool {{ haskell.tools | join(' ') }}"
+# - name: Install expected tools
+#   shell: "source ~/.bash_aliases && h tools"
+#   args:
+#     executable: /bin/bash
+#     command: "stack build --copy-compiler-tool {{ haskell.tools | join(' ') }}"
+
+- name: Install Glassgow-Haskell Compiler and Friends
+  command: "stack setup"

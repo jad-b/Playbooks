@@ -146,6 +146,5 @@ done
 # Group can read + execute
 # Others can't do anything
 umask 027
-
 echo "Week $(date +%W)"
 if [ -e /home/jdb/.nix-profile/etc/profile.d/nix.sh ]; then . /home/jdb/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
