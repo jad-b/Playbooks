@@ -1,12 +1,7 @@
 # Setup Vim just the way I like it.
 
-- name: Install Vundle
-  git:
-    repo: https://github.com/VundleVim/Vundle.vim.git
-    dest: ~/.vim/bundle/Vundle.vim
-
 - name: Install vim plugins
-  command: vim -E -s -c "source ~/.vimrc" +PluginUpdate +qall
+  command: nvim +PluginUpdate +qall
   ignore_errors: true
 
 - name: Symlink local Vim configs
@@ -18,8 +13,8 @@
     state: link
     force: yes
   loop:
-    - { src: ".vimrc", dst: ".vimrc" }
-    - { src: "ftplugin", dst: ".vim/ftplugin" }
+    - {src: ".vimrc", dst: ".vimrc"}
+    - {src: "ftplugin", dst: ".vim/ftplugin"}
 
 - name: Symlink system Vim configs
   file:
@@ -29,6 +24,7 @@
     group: "{{ ansible_user }}"
     state: link
     force: yes
+    follow: no
   become: yes
   loop:
-    - { src: "nvim_tmpfiles.conf", dst: "/etc/tmpfiles.d/nvim.conf" }
+    - {src: "nvim_tmpfiles.conf", dst: "/etc/tmpfiles.d/nvim.conf"}

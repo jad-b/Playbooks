@@ -6,13 +6,6 @@ now() {
 # Capture beginning of run time
 start="$(now)"
 
-# Create symlinks under $HOME to the top-level directories within Sync
-link_sync_dirs() {
-  for f in $(find ~/Sync -maxdepth 1 -not \( -path ~/Sync -o -name '\.*' \) -type d); do
-    ln -sT ${f} ~/${f#~/Sync/};
-  done
-}
-
 time_since(){
 	diff="$(($(date +%s%N)-$1))"
 	# Drop nanoseconds through milliseconds (/10**9)
@@ -45,12 +38,12 @@ export EMAIL="j.american.db@gmail.com"
 
 pre_bashrc=$(now)
 . ~/.bashrc
-# printf "Loaded .bashrc in %s\n" "$(time_since "$pre_bashrc")"
+printf "Loaded .bashrc in %s\n" "$(time_since "$pre_bashrc")"
 
 if [ -f ~/.bash_aliases ]; then
     pre_aliases=$(now)
     . ~/.bash_aliases
-    # printf "Loaded .bash_aliases in %s\n" "$(time_since "$pre_aliases")"
+    printf "Loaded .bash_aliases in %s\n" "$(time_since "$pre_aliases")"
 fi
 
 # Local binaries
@@ -71,14 +64,9 @@ fi
 
 # Golang
 if [ -d /usr/local/go ]; then
-    export PATH="/usr/local/go/bin:${PATH}"
-    export GOPATH="${HOME}/go"
+    export GOPATH="${HOME}"
     export GOMAXPROCS=$(nproc)
-fi
-
-# Haskell
-if hash stack 2>/dev/null; then
-	eval "$(stack --bash-completion-script stack)"
+    export PATH="/usr/local/go/bin:${GOPATH}/bin:${PATH}"
 fi
 
 # Julia
@@ -90,7 +78,7 @@ fi
 
 # Node & NPM
 if hash npm 2>/dev/null; then
-    NPM_PACKAGES="${HOME}/.local/npm-packages"
+    NPM_PACKAGES="${HOME}/.npm-global"
     export PATH="${NPM_PACKAGES}/bin:${PATH}"
     unset MANPATH
     export MANPATH="${NPM_PACKAGES}/share/man:$(manpath)"
@@ -119,34 +107,45 @@ fi
 
 # Rust
 if [ -d ~/.cargo ]; then
-    # export PATH="${HOME}/.cargo/bin:${PATH}"
-    source ~/.cargo/env
+    export PATH="${HOME}/.cargo/bin:${PATH}"
+fi
+
+# Haskell
+if hash stack 2>/dev/null; then
+	eval "$(stack --bash-completion-script stack)"
+fi
+
+# Nix
+NIX_DIR="${HOME}/.nix-profile/etc/profile.d/nix.sh"
+if [ -d "${NIX_DIR}" ]; then
+  . "${NIX_DIR}"
 fi
 
 # wait "$pending_pid"
 # cat tasks
 # ? How to close 'tasks'?
 
-# src=http://rabexc.org/posts/pitfalls-of-ssh-agents
-test -n "${SSH_AGENT_PID}" && ps -p ${SSH_AGENT_PID} >/dev/null
-if [[ "$?" -ne 0 ]]; then
-  # Try loading the last config, if available
-  test -r ~/.ssh-agent && \
-    eval "$(<~/.ssh-agent)" >/dev/null
 
-  # Re-test
-  test -n "${SSH_AGENT_PID}" && ps -p ${SSH_AGENT_PID} >/dev/null
-  if [[ "$?" -ne 0 ]]; then
-    echo -n "Starting ssh-agent..."
-    (umask 066; ssh-agent > ~/.ssh-agent)
-    eval "$(<~/.ssh-agent)" >/dev/null
-    ssh-add
-    echo "done."
-  fi
-else
-  echo "ssh-agent found; taking no action"
-fi
+source_files=(
+    ~/.secrets
+    ~/.ocirc
+    ~/.dockerrc
+)
+
+# Source all our files
+for i in "${source_files[@]}"; do
+    # echo "Sourcing $i ..."
+    if [ -e "$i" ]; then
+        # echo ">> Sourced $i"
+        . "$i"
+    fi
+done
+
+# Set default permissions
+# User can do anything
+# Group can read + execute
+# Others can't do anything
+umask 027
 
 echo "Week $(date +%W)"
-
-export PATH="$HOME/.cargo/bin:$PATH"
+if [ -e /home/jdb/.nix-profile/etc/profile.d/nix.sh ]; then . /home/jdb/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer

@@ -1,0 +1,10 @@
+---
+kvm:
+  apt_pkgs:
+    - bridge-utils
+    - libvirt-bin
+    - libvirt-clients
+    - libvirt-daemon-system
+    - ovmf
+    - qemu-kvm
+    - virt-manager

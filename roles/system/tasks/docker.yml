@@ -1,13 +1,12 @@
 ---
 - name: Install Docker HTTPS Repo Pre-reqs
   apt:
-    name: "{{ item }}"
+    name: 
+      - 'apt-transport-https'
+      - 'ca-certificates'
+      - 'curl'
+      - 'software-properties-common'
     update_cache: yes
-  with_items:
-    - apt-transport-https
-    - ca-certificates
-    - curl
-    - software-properties-common
 
 - name: Install Docker's GPG Key
   apt_key:

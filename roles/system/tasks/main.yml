@@ -1,15 +1,22 @@
 ---
 
 - import_tasks: packages.yml
-  tags: packages
+  tags: packages, apt
   become: yes
 
-- import_tasks: docker.yml
-  tags: docker
-  become: yes
+  # - import_tasks: docker.yml
+  #   tags: docker
+  #   become: yes
 
 - name: Create journal directory
   file:
     state: directory
     path: "/var/log/journal"
   become: yes
+
+- import_tasks: syncthing.yml
+  tags: syncthing
+  become: yes
+
+- import_tasks: windows10.yml
+  tags: windows

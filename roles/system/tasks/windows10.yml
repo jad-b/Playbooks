@@ -1,0 +1,62 @@
+---
+- import_tasks: kvm.yml
+  become: yes
+
+- name: Blacklist nouveau drviers
+  copy:
+    src: "{{ playbook_dir }}/roles/system/files/blacklist-nouveau.conf"
+    dest: "/etc/modprobe.d/blacklist-nouveau.conf"
+    owner: "root"
+    group: "root"
+    mode: '0644'
+  become: yes
+
+- name: Update GRUB config
+  lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
+    line: 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash intel_iommu=on"'
+  become: yes
+
+- name: Update GRUB
+  command: update-grub
+  become: yes
+
+- name: Get GPU PCI ID
+  shell: lspci -nn | grep -i nvidia | rg '[a-f0-9]+:[a-f0-9]+' -o | tail -n1
+  register: gpu_pci_id
+
+- name: Print GPU PCI ID
+  debug:
+    var: gpu_pci_id
+
+- name: Create VFIO config
+  file:
+    path: /etc/modprobe.d/vfio.conf
+    owner: "root"
+    group: "root"
+    mode: '0644'
+    state: touch
+  become: yes
+
+- name: VFIO-PCI Kernel Module
+  lineinfile:
+    path: /etc/modprobe.d/vfio.conf
+    regexp: '^options vfio-pci ids='
+    line: "options vfio-pci ids={{ gpu_pci_id.stdout }}"
+    insertafter: yes
+    state: present
+  become: yes
+
+- name: Load VFIO-PCI module
+  copy:
+    src: "{{ playbook_dir }}/roles/system/files/vfio-pci.conf"
+    dest: "/etc/modules-load.d/vfio-pci.conf"
+    owner: "root"
+    group: "root"
+    mode: '0644'
+  become: yes
+
+- name: Regenerate kernel initramfs
+  command: update-initramfs -u
+  become: yes

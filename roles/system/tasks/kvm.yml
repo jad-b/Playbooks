@@ -1,0 +1,12 @@
+---
+- name: Install KVM/QEMU packages
+  apt:
+    name: "{{ kvm.apt_pkgs }}"
+    state: latest
+    update_cache: yes
+
+- name: Add user to libvirt group
+  user:
+    append: yes
+    groups: libvirt
+    name: "{{ ansible_user }}"

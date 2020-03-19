@@ -3,12 +3,23 @@
 
 alias rals='. ~/.bash_aliases'
 alias rebash='. ~/.bash_profile'
-alias vals='vim ~/.bash_aliases'
+
+alias grep='rg'
+
+if hash nvim 2>/dev/null; then
+  alias vi=nvim
+  alias vim=nvim
+fi
 
 # System aliases
 alias ll='ls -alFhtA'
 alias la='ls -A'
 alias l='ls -CF'
+
+fixperms() {
+  chmod 0640 $(find . -type f)
+  chmod 0755 $(find . -type d)
+}
 
 # ipv4 address for $1
 ipv4addr() {
@@ -17,10 +28,6 @@ ipv4addr() {
 
 # Errors from this boot
 # journalctl -k -b -p err
-
-gtd() {
-  vim -O ~/Sync/@Home.md ~/Sync/@Anywhere.md
-}
 
 # Usage: cat file.txt | xclipd
 alias xclipd='xclip -selection clipboard'
@@ -54,11 +61,6 @@ joinString() {
 	printf "%s" "$*"
 }
 
-# Grep within specific files.
-findgrep() {
-    find . -name "$1" -exec grep -H "$2" {} \;
-}
-
 
 ###############################################################################
 # Map, in bash!
@@ -90,6 +92,20 @@ map(){
 	for h in $hosts; do
 		printf "%s\n\t %s\n" "$h" "$(eval  "$cmd $h")"
 	done
+}
+
+sshx () {
+  case "$1" in
+    fingerprint)
+      ssh-keygen -E md5 -lf "$2"
+      ;;
+    public-key)
+      ssh-keygen -y -f "$2"
+      ;;
+    *)
+      echo "Unknown command"
+      ;;
+  esac
 }
 
 ###############################################################################
@@ -236,6 +252,7 @@ work() {
   local results
   # Where your code|projects live
   local dev_dirs=(
+    "$HOME/Sync/src"
 		"$HOME/src/"
 		"$(pwd)"
     "$HOME"
@@ -247,8 +264,8 @@ work() {
   )
   # printf "Raw Results]\n%s\n\n" "${results[*]}"
 	# shellcheck disable=SC2086
-  IFS=$'\n' results=($(sort -u <<< "${results[*]}"))
-  unset IFS
+  #IFS=$'\n' results=($(sort -u <<< "${results[*]}"))
+  #unset IFS
   # printf "Results]\n%s\n\n" "${results[*]}"
   # printf "Top Result] %s\n" "${results[0]}"
 	if [[ -z ${results[0]// } ]]; then
@@ -430,7 +447,34 @@ alias ipy=ipython3
 ###############################################################################
 # Haskell
 ###############################################################################
-alias hask='stack ghci'
+shake() {
+  local shakefile="$(find $(git rev-parse --show-toplevel) -name Build.hs -type f \
+    | head -n1)"
+  cd "$(dirname ${shakefile})"
+  stack exec -- ./build.sh "$@"
+}
+
+h() {
+  local bins=(
+    stylish-haskell
+    ghcid
+    hdevtools
+    hlint
+    hoogle
+    shake
+  )
+
+  case "$1" in
+    tools)
+      echo "Installing tooling..."
+      stack build --copy-compiler-tool "${bins[@]}"
+      ;;
+    *)
+      echo "Unknown command $@"
+      return 1
+      ;;
+  esac
+}
 
 ###############################################################################
 # Go
