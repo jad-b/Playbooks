@@ -110,6 +110,17 @@ if [ -d ~/.cargo ]; then
     export PATH="${HOME}/.cargo/bin:${PATH}"
 fi
 
+# Haskell
+if hash stack 2>/dev/null; then
+	eval "$(stack --bash-completion-script stack)"
+fi
+
+# Nix
+NIX_DIR="${HOME}/.nix-profile/etc/profile.d/nix.sh"
+if [ -d "${NIX_DIR}" ]; then
+  . "${NIX_DIR}"
+fi
+
 # wait "$pending_pid"
 # cat tasks
 # ? How to close 'tasks'?
@@ -137,3 +148,4 @@ done
 umask 027
 
 echo "Week $(date +%W)"
+if [ -e /home/jdb/.nix-profile/etc/profile.d/nix.sh ]; then . /home/jdb/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer

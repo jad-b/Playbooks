@@ -1,9 +1,5 @@
 ---
-- name: Install KVM/QEMU packages
-  apt:
-    name: "{{ windows10.apt_pkgs }}"
-    state: latest
-    update_cache: yes
+- import_tasks: kvm.yml
   become: yes
 
 - name: Blacklist nouveau drviers

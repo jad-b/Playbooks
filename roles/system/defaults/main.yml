@@ -1,9 +1,10 @@
 ---
-windows10:
+kvm:
   apt_pkgs:
-    - qemu-kvm
+    - bridge-utils
+    - libvirt-bin
     - libvirt-clients
     - libvirt-daemon-system
-    - bridge-utils
-    - virt-manager
     - ovmf
+    - qemu-kvm
+    - virt-manager

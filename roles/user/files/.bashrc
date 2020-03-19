@@ -157,7 +157,7 @@ fi
 # CLI Completion Scripts
 ###############################################################################
 # Array of files within .completions
-pre_complete=$(now)
+# pre_complete=$(now)
 COMPLETIONS=(~/.completions/*)
 # Source all our files
 for i in "${source_files[@]}" "${COMPLETIONS[@]}"; do
@@ -179,12 +179,10 @@ fi
 
 [[ -e "/home/${USER}/.oci/lib/python3.6/site-packages/oci_cli/bin/oci_autocomplete.sh" ]] && source "/home/${USER}/.oci/lib/python3.6/site-packages/oci_cli/bin/oci_autocomplete.sh"
 
-# printf "Sourced completions in %s\n" "$(time_since "$pre_complete")"
+# printf "Sourced completions in %s\n" "$(time_since "$# pre_complete")"
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
-# Haskell
-if hash stack 2>/dev/null; then
-	eval "$(stack --bash-completion-script stack)"
-fi
-
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
