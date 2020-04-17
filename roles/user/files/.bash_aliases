@@ -578,6 +578,14 @@ if hash npm 2>/dev/null; then
     # export NODE_PATH="${NPM_PACKAGES}/lib/node_modules:${NODE_PATH}"
 fi
 
+yarn_pattern="${HOME}/.local/opt/yarn*"
+if compgen -G "${yarn_pattern}"; then
+  # Grab first match
+  # TODO sort descending to get the latest
+  yarns=( ${pattern} )
+  export PATH="${yarns[0]}/bin:${PATH}"
+fi
+
 ###############################################################################
 # Python
 ###############################################################################

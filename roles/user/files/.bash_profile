@@ -46,11 +46,12 @@ if [ -d ~/.local/bin ]; then
     export PATH="${HOME}/.local/bin:${PATH}"
 fi
 
-if [ -d "${HOME}/.local/opt" ]; then
-	for path in ${HOME}/.local/opt/**/bin; do
-		export PATH="${PATH}:$path"
-	done
-fi
+# NOTE) Too powerful.
+# if [ -d "${HOME}/.local/opt" ]; then
+# 	for path in ${HOME}/.local/opt/**/bin; do
+# 		export PATH="${PATH}:$path"
+# 	done
+# fi
 
 pre_bashrc=$(now)
 . ~/.bashrc

@@ -49,8 +49,8 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 " ~~~~~~~~~~~~~~ Language support ~~~~~~~~~~~~~~
 " https://github.com/ElmCast/elm-vim
 Plug 'elmcast/elm-vim'
-Plug 'dense-analysis/ale'
-Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' } " Go support
+" Plug 'dense-analysis/ale'
+" Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' } " Go support
 Plug 'chase/vim-ansible-yaml'
 " Python
 Plug 'tell-k/vim-autopep8' " Python - automatic pep8 fixes
@@ -147,28 +147,28 @@ let g:netrw_winsize=30
 nmap <F8> :TagbarToggle<CR>
 
 " ---------- vim-go ----------
-let g:go_version_warning = 0
-" Run :Lint to execute golint on the current file
-set rtp+=$GOPATH/src/github.com/golang/lint/misc/vim
-" Run commands, such as go run with <leader>r for the current file or go build
-" and go test for the current package with <leader>b and <leader>t. Display a
-" beautiful annotated source code to see which functions are covered with <leader>c
-au FileType go nmap <leader>gr <Plug>(go-run)
-au FileType go nmap <leader>gb <Plug>(go-build)
-au FileType go nmap <leader>gt <Plug>(go-test)
-au FileType go nmap <leader>gc <Plug>(go-coverage)
-au FileType go nmap <leader>gv <Plug>(go-vet)
-" Open the relevant Godoc for the word under the cursor with <leader>gd
-" or open it vertically with <leader>gv
-au FileType go nmap <Leader>gd <Plug>(go-doc)
-au FileType go nmap <Leader>gdv <Plug>(go-doc-vertical)
-" Show a list of interfaces which is implemented by the type under your cursor with <leader>s
-au FileType go nmap <Leader>gs <Plug>(go-implements)
-" Show type info for the word under your cursor with <leader>i (useful if you have disabled auto showing type info via g:go_auto_type_info)
-au FileType go nmap <Leader>gi <Plug>(go-info)
-" Rename the identifier under the cursor to a new name
-au FileType go nmap <Leader>e <Plug>(go-rename)
-" Enable goimports to automatically insert import paths instead of gofmt:
+" let g:go_version_warning = 0
+" " Run :Lint to execute golint on the current file
+" set rtp+=$GOPATH/src/github.com/golang/lint/misc/vim
+" " Run commands, such as go run with <leader>r for the current file or go build
+" " and go test for the current package with <leader>b and <leader>t. Display a
+" " beautiful annotated source code to see which functions are covered with <leader>c
+" au FileType go nmap <leader>gr <Plug>(go-run)
+" au FileType go nmap <leader>gb <Plug>(go-build)
+" au FileType go nmap <leader>gt <Plug>(go-test)
+" au FileType go nmap <leader>gc <Plug>(go-coverage)
+" au FileType go nmap <leader>gv <Plug>(go-vet)
+" " Open the relevant Godoc for the word under the cursor with <leader>gd
+" " or open it vertically with <leader>gv
+" au FileType go nmap <Leader>gd <Plug>(go-doc)
+" au FileType go nmap <Leader>gdv <Plug>(go-doc-vertical)
+" " Show a list of interfaces which is implemented by the type under your cursor with <leader>s
+" au FileType go nmap <Leader>gs <Plug>(go-implements)
+" " Show type info for the word under your cursor with <leader>i (useful if you have disabled auto showing type info via g:go_auto_type_info)
+" au FileType go nmap <Leader>gi <Plug>(go-info)
+" " Rename the identifier under the cursor to a new name
+" au FileType go nmap <Leader>e <Plug>(go-rename)
+" " Enable goimports to automatically insert import paths instead of gofmt:
 
 
 " -------- coc --------
@@ -324,6 +324,12 @@ endfunction
 
 inoremap <silent><expr> <down> coc#util#has_float() ? FloatScroll(1) : "\<down>"
 inoremap <silent><expr>  <up>  coc#util#has_float() ? FloatScroll(0) :  "\<up>"
+
+nnoremap <silent><expr> <down> coc#util#has_float() ? FloatScroll(1) : "\<down>"
+nnoremap <silent><expr>  <up>  coc#util#has_float() ? FloatScroll(0) :  "\<up>"
+
+" Language-specific features
+autocmd BufWritePre *.go :call CocAction('runCommand', 'editor.action.organizeImport')
 
 " -------- linting --------
 

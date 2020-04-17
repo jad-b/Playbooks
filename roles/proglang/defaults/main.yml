@@ -5,5 +5,5 @@ julia:
 
 # https://golang.org/dl/
 go:
-  version: 1.13.1
+  version: 1.14.2
   dir: /usr/local/go
