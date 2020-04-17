@@ -41,6 +41,7 @@
     # Removes old branches that have been merged into master
     # "(^\*|master)" excludes current branch & master
 	sweep = !git branch --merged | egrep -v \"(^\\*|master)\" | xargs git branch -d
+    today = log --oneline --graph --no-merges --after yesterday
     unignore = update-index --no-assume-unchanged
     unstage = reset HEAD --
     untracked = ls-files --others --exclude-standard
@@ -73,6 +74,11 @@
     enabled = true
 [url "git@github.com:"]
 	insteadOf = gh:
+[url "ssh://git@github.com/"]
+	insteadOf = https://github.com/
+[url "ssh://git@bitbucket.oci.oraclecorp.com:7999"]
+	insteadOf = https://bitbucket.oci.oraclecorp.com/scm
 [user]
 	name = Jeremy Dobbins-Bucklad
 	email = jad-b@users.noreply.github.com
+
