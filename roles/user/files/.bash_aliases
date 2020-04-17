@@ -587,7 +587,7 @@ yarn_pattern="${HOME}/.local/opt/yarn*"
 if compgen -G "${yarn_pattern}"; then
   # Grab first match
   # TODO sort descending to get the latest
-  yarns=( ${pattern} )
+  yarns=( ${yarn_pattern} )
   export PATH="${yarns[0]}/bin:${PATH}"
 fi
 
