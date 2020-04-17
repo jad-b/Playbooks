@@ -1,5 +1,49 @@
-#!/bin/bash -e
+#!/bin/bash
 # vim: filetype=sh
+# Section syntax:
+# Single block:
+#     ########...
+#     # Section
+#     ########...
+#
+# Multi-block:
+#     #=======
+#     # Parent
+#     #-------
+#     ...
+#     ########
+#     # Child
+#     #~~~~~~~
+#     ...
+#     #~~~~~~~
+#     # Child
+#     ########
+#     ...
+#     #-------
+#     # Parent
+#     #=======
+set -u
+
+###############################################################################
+# General Variables
+###############################################################################
+SOURCE_FILES=(
+    ~/.secrets
+    ~/.ocirc
+    ~/.dockerrc
+)
+# Source all our files
+for i in "${SOURCE_FILES[@]}"; do
+    # echo "Sourcing $i ..."
+    if [ -e "$i" ]; then
+        # echo ">> Sourced $i"
+        . "$i"
+    fi
+done
+
+###############################################################################
+# Command aliases
+###############################################################################
 
 alias rals='. ~/.bash_aliases'
 alias rebash='. ~/.bash_profile'
@@ -9,6 +53,9 @@ alias grep='rg'
 if hash nvim 2>/dev/null; then
   alias vi=nvim
   alias vim=nvim
+  export EDITOR=nvim
+else
+  export EDITOR=vim
 fi
 
 # System aliases
@@ -16,53 +63,38 @@ alias ll='ls -alFhtA'
 alias la='ls -A'
 alias l='ls -CF'
 
-fixperms() {
-  chmod 0640 $(find . -type f)
-  chmod 0755 $(find . -type d)
-}
-
-# ipv4 address for $1
-ipv4addr() {
-    ip -4 addr show dev "$1" | sed -n 's/^ *inet *\([.0-9]\+\).*/\1/p'
-}
-
-# Errors from this boot
-# journalctl -k -b -p err
-
 # Usage: cat file.txt | xclipd
 alias xclipd='xclip -selection clipboard'
 
 # Overrides the 'open' command
 alias open='xdg-open'
 
-detectGoPkg() {
-	local gosrc=$HOME/go/src/
-	if [[ $PWD == $gosrc* ]]; then
-		export GOPKG=${PWD#$gosrc}
-		# echo "GOPKG=${PWD#$gosrc}"
-	else
-		unset GOPKG
-		# echo "Unsetting GOPKG"
-	fi
+# cd() {
+# 	builtin cd "$@"
+#   # if [ -n TMUX ]; then
+#   #     path=${*%*/} # Remove trailing slash
+#   #     #tmux rename-window "${path##*/}" # Remove everything through last slash
+#   # fi
+# }
+
+alias aptinstall='sudo apt-get install -y'
+alias aptupdate='sudo apt-get update'
+alias aptupgrade='sudo apt-get upgrade -y'
+alias upnup='sudo apt-get update; sudo apt-get dist-upgrade -y'
+
+cleanup (){
+	set -x
+	echo "Cleaning up"
+	sudo apt-get autoclean
+	sudo apt-get clean
+	sudo apt-get autoremove
+	set +x
 }
 
-cd() {
-	builtin cd "$@"
-    if [ -n TMUX ]; then
-        path=${*%*/} # Remove trailing slash
-        #tmux rename-window "${path##*/}" # Remove everything through last slash
-    fi
-	detectGoPkg
-}
+#=============================================================================#
+# Utility Functions
+#-----------------------------------------------------------------------------#
 
-joinString() {
-	local IFS="$1"
-	shift
-	printf "%s" "$*"
-}
-
-
-###############################################################################
 # Map, in bash!
 #
 # Usage:
@@ -70,7 +102,6 @@ joinString() {
 #
 # Example:
 #     map dig +short -- $(allbox prod ussnn1 | tr '\n' ' ')
-###############################################################################
 map(){
 	local delim='--'
 	local hosts=""
@@ -94,103 +125,7 @@ map(){
 	done
 }
 
-sshx () {
-  case "$1" in
-    fingerprint)
-      ssh-keygen -E md5 -lf "$2"
-      ;;
-    public-key)
-      ssh-keygen -y -f "$2"
-      ;;
-    *)
-      echo "Unknown command"
-      ;;
-  esac
-}
-
-###############################################################################
-                                # Networking #
-###############################################################################
-# Print the (hostname,ens3 IPv4 address) tuple for the given interface.
-inet_addrs() {
-    local IFACE=$1
-    local HOST=$2
-    ssh -T $HOST <<-EOH
-    /usr/sbin/ip addr show $IFACE | \
-        grep 'inet\b' | \
-        awk '{print \$2}' | \
-        cut -d/ -f1
-EOH
-}
-
-wifictl (){
-	case "$1" in
-		on)
-			nmcli nm wifi on
-			;;
-		off)
-			nmcli nm wifi off
-			;;
-		flap)
-			nmcli nm wifi off && nmcli nm wifi on
-			;;
-	esac
-}
-
-# Important variable exports
-dotfiles=(
-	'.dockerrc'
-	'.inputrc'
-    '.bash_aliases'
-    '.bashrc'
-    #'.gitconfig'
-    '.profile'
-    '.tmux.conf'
-    '.vimrc'
-)
-# Prefix with absolute path
-export DOTFILES=( "${dotfiles[@]/#/$HOME/}" )
-
-getconf(){
-    # Retrieve all *rc files from the home directory
-    find "$HOME" -maxdepth 0 -regex '.[^.]*' -printf '%P\n'
-}
-
-updots(){
-    # Upload some essential dotfiles to the remote server
-    # Prefix files with '$HOME/'
-	HOST="$1"
-	REMOTE_USER="${2:-jdobbinsbucklad}"
-    DEST=/home/"$REMOTE_USER"/
-    echo "Uploading ${DOTFILES[@]} to $REMOTE_USER@$HOST:$DEST"
-    rsync -avzL "${DOTFILES[@]}" "$REMOTE_USER@$HOST:$DEST"
-	# Setup TPM
-	echo "Setting up TMUX Plugin manager"
-	local tpm_dir="$REMOTE_USER/.tmux/plugins/"
-	ssh "$REMOTE_USER@$HOST" mkdir -p $tpm_dir
-	rsync -avz ~/.tmux/plugins/tpm "$REMOTE_USER@$HOST:$tpm_dir"
-	# This has become a *lot* of files:
-	# rsync -avz ~/.vim "$REMOTE_USER@$HOST:$DEST"
-}
-
-# Pulls out the version from a string
-whatver(){
-	sed -s -n 's/^.*\([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/p' <<< "$1"
-}
-
-mine(){
-    sudo chown -R jdb:jdb "${1:-.}"
-}
-
-yours() {
-	set -u
-	sudo chown -R "$1": "${2:-.}"
-	set +u
-}
-
-###############################################################################
 # Kill all listed tmux sessions
-###############################################################################
 tmux-kill(){
     for i in "$@"; do
         echo "Killing session $i..."
@@ -198,54 +133,12 @@ tmux-kill(){
     done
 }
 
-###############################################################################
-# Run given command on changes.
-###############################################################################
-poll(){
-    local FORMAT=$(echo -e "\033[1;33m%w%f\033[0m written")
-    while inotifywait -qre close_write --format "$FORMAT" .; do
-        eval "$@" || true
-    done
-}
-
-###############################################################################
-# Swap two filenames in place.
-#
-# Globals:
-#   None
-# Arguments:
-#   Name of first file
-#   Name of second file
-# Returns:
-#   None
-###############################################################################
-swap() {
-    local TMPFILE=tmp.$$    # '$$' is the process ID; creates unique filename
-    mv "$1" $TMPFILE
-    mv "$2" "$1"
-    mv $TMPFILE "$2"
-}
-
-###############################################################################
-# Print latest file in given or current directory
-#
-# Arguments:
-#   Directory to retrieve latest file from.
-###############################################################################
-latest(){
-    SEARCH_PATH=${1:-.}
-    find "$SEARCH_PATH" -maxdepth 1 -type f -printf '%T+ %p\n' | sort -r | head -n1 | awk '{print $2}'
-
-}
-
-###############################################################################
 # Change to a new project
 #
 # Searches for a directory within a preset array of source code directories.
 #
 # Arguments:
 #   PROJECT: Name of project directory.
-###############################################################################
 work() {
 	local project="$1"
   # Search results
@@ -278,23 +171,104 @@ work() {
 }
 
 ###############################################################################
-# Open a file for writing
+# String
+###############################################################################
+joinString() {
+	local IFS="$1"
+	shift
+	printf "%s" "$*"
+}
+
+# Pulls out the version from a string
+whatver(){
+	sed -s -n 's/^.*\([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/p' <<< "$1"
+}
+#-----------------------------------------------------------------------------#
+# Utility Functions
+#=============================================================================#
+
+###############################################################################
+# Filesystem
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Important variable exports
+dotfiles=(
+	'.dockerrc'
+	'.inputrc'
+  '.bash_aliases'
+  '.bashrc'
+  #'.gitconfig'
+  '.profile'
+  '.tmux.conf'
+  '.vimrc'
+)
+# Prefix with absolute path
+export DOTFILES=( "${dotfiles[@]/#/$HOME/}" )
+
+# Make mount command output pretty and human readable format
+alias mount='mount |column -t'
+## a quick way to get out of current directory ##
+alias ..="cd ../"
+alias ...="cd ../../"
+alias ....="cd ../../../"
+alias .....="cd ../../../../"
+
+# Make mount command output pretty and human readable format
+alias mount='mount |column -t'
+
+getconf(){
+    # Retrieve all *rc files from the home directory
+    find "$HOME" -maxdepth 0 -regex '.[^.]*' -printf '%P\n'
+}
+
+fixperms() {
+  chmod 0640 $(find . -type f)
+  chmod 0755 $(find . -type d)
+}
+
+mine(){
+    sudo chown -R jdb:jdb "${1:-.}"
+}
+
+yours() {
+	set -u
+	sudo chown -R "$1": "${2:-.}"
+	set +u
+}
+
+# Run given command on changes.
+poll(){
+    local FORMAT=$(echo -e "\033[1;33m%w%f\033[0m written")
+    while inotifywait -qre close_write --format "$FORMAT" .; do
+        eval "$@" || true
+    done
+}
+
+# Swap two filenames in place.
 #
-# TODO(2017Feb24,jdb):
-#   - Case-insensitive search
-#   - Fuzzy string matching using heuristics and edit distance
+# Globals:
+#   None
+# Arguments:
+#   Name of first file
+#   Name of second file
+# Returns:
+#   None
+swap() {
+    local TMPFILE=tmp.$$    # '$$' is the process ID; creates unique filename
+    mv "$1" $TMPFILE
+    mv "$2" "$1"
+    mv $TMPFILE "$2"
+}
+
+# Print latest file in given or current directory
 #
 # Arguments:
-#   FILENAME: Name of file to open.
-#   DIRECTORY: Parent directory to search within.
-###############################################################################
-pen() {
-	local FILENAME=${1}
-	local DIRECTORY=${1:-.}
+#   Directory to retrieve latest file from.
+latest(){
+    SEARCH_PATH=${1:-.}
+    find "$SEARCH_PATH" -maxdepth 1 -type f -printf '%T+ %p\n' | sort -r | head -n1 | awk '{print $2}'
 
 }
 
-###############################################################################
 # List the ten largest file/directories
 #
 # Globals:
@@ -303,7 +277,6 @@ pen() {
 #   Directory to search
 # Returns:
 #   Descending list of ten largest files/directories
-###############################################################################
 top10(){
     sudo du -hx "${1:-.}" | sort -rh | head -10
 }
@@ -320,103 +293,21 @@ dateme(){
 	date +"%Y%b%d"
 }
 
-
-###############################################################################
-# Creates a Jekyll-accepted post file.
-###############################################################################
-jpost(){
-    BLOGDIR="$HOME/Dropbox/dev/most_resistance/categories"
-    DIRPATH="$BLOGDIR/$CATEGORY/_posts"
-	# Display help message
-    if [ $# -eq 0 ]; then
-		cat <<EOF
-Usage:
-	jpost <category> <post name with spaces>
-
-	Available categories:
-	$(find "$BLOGDIR" -type f -maxdepth=1 | tr '\n' ' ')
-EOF
-        return 0
-    fi
-
-    # Extract target category
-    CATEGORY="$1"
-    shift 1
-
-    # Put hyphens in the title
-    HYPHENATED_TITLE="$(echo "$@" | tr ' ' '-')"
-    FILENAME="$(date +%F)-$HYPHENATED_TITLE.md"
-    echo "Creating $CATEGORY/$FILENAME"
-
-    if [ ! -d "$DIRPATH" ]; then  # Create the thing.
-        # Create category &| _posts dir
-        mkdir -p "$DIRPATH"
-        # Stream and modify our new category's index.html
-        sed  's/^category: \w\+$/category: '"$CATEGORY"'/g' \
-            "$BLOGDIR/programming/index.html" > "$BLOGDIR/$CATEGORY/index.html"
-    fi
-    FILEPATH="$DIRPATH/$FILENAME"
-    cat > "$FILEPATH" <<EOF
----
-layout: page
-title: $@
-category: $CATEGORY
----
-EOF
-    # Open file in vim
-    vim "$FILEPATH"
-}
-
-
-# Make mount command output pretty and human readable format
-alias mount='mount |column -t'
-
-
-###############################################################################
 # Display a directory tree
 #
 # Arguments
 #   1: Root directory of the tree
 #   @:1) Arguments to 'tree'
-###############################################################################
 treed(){
 	tree -d  "${@:2}" "${1:-.}"
 }
-
-alias aptinstall='sudo apt-get install -y'
-alias aptupdate='sudo apt-get update'
-alias aptupgrade='sudo apt-get upgrade -y'
-alias upnup='sudo apt-get update; sudo apt-get dist-upgrade -y'
-cleanup (){
-	set -x
-	echo "Cleaning up"
-	sudo apt-get autoclean
-	sudo apt-get clean
-	sudo apt-get autoremove
-	set +x
-}
-
-## a quick way to get out of current directory ##
-alias ..="cd ../"
-alias ...="cd ../../"
-alias ....="cd ../../../"
-alias .....="cd ../../../../"
-
-# vim helpers
-alias vi=vim
-alias svi='sudo vi'
-alias vis='vim "+set si"'
-alias svir='sudo vim -R'
-alias edit='vim'
 
 # print free disk space
 diskfree(){
     df -h | grep /dev/sda1 | awk '{print $5}'
 }
 
-###############################################################################
 # Search and replace on a file regex.
-###############################################################################
 snr() {
     if [[ -n ${DRY_RUN+x} ]]; then  # Do a dry run
         find . -name "$1" -type f -exec sed -n "s/$2/$3/gp" {} \;
@@ -424,119 +315,121 @@ snr() {
         find . -name "$1" -type f -exec sed -i "s/$2/$3/g" {} \;
     fi
 }
-
-### End sys aliasing...for now
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Filesystem
 ###############################################################################
 
 ###############################################################################
-# Python
-###############################################################################
-alias py3='python3'
-# Expand Python file trees, w/o showing stupid .pyc files
-alias pytree='tree -I *.pyc --prune .'
-# Pip
-alias pipu='pip2 install --user'
-alias pip3u='pip3 install --user'
-# Uninstall every Python package
-alias pipclear='pip freeze | grep -v "^-e" | xargs pip uninstall -y'
-# Delete all __pycache__/.pyc files
-alias rmpyc="find . -name __pycache__ -type d -delete -o -name '*.pyc' -type f -delete"
-# IPython, you so *handy*
-alias ipy=ipython3
+# Networking
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-###############################################################################
-# Haskell
-###############################################################################
-shake() {
-  local shakefile="$(find $(git rev-parse --show-toplevel) -name Build.hs -type f \
-    | head -n1)"
-  cd "$(dirname ${shakefile})"
-  stack exec -- ./build.sh "$@"
+# Common TLS operations
+tls() {
+    local SSL_PRIVATE_KEY=privatekey.pem
+    local SSL_CSR=csr.pem
+    local SSL_CERT=server.crt
+    case "$1" in
+        view) # Display a cert, even in encoded .pem format.
+            openssl x509 -in "$2" -text -noout
+            ;;
+		view-bundle) # Display a concatenated list of certs in a file
+			openssl crl2pkcs7 -nocrl -certfile "$2" |\
+			openssl pkcs7 -print_certs -text -noout
+			;;
+        server) # Open a TLS connection to a live server; $2 should be 'host:port'
+            openssl s_client -connect "$2:${3:-443}" -showcerts -servername "$2"
+            ;;
+		compare) # Check a public cert and private key for compatibility
+			openssl x509 -noout -modulus -in "$2" | openssl md5;\
+			openssl rsa -noout -modulus -in "$3" | openssl md5
+			# Pipe through 'uniq' for a quick view of any differences
+			;;
+        key) # Generate a TLS key
+            KEY=${2:-$SSL_PRIVATE_KEY};
+            STRENGTH=${3:-2048};
+            openssl genrsa "$STRENGTH" > "$KEY"
+            ;;
+        csr) # Generate a Certificate Signing Request
+            KEY=${2:-$SSL_PRIVATE_KEY}
+            CSR=${3:-$SSL_CSR}
+            openssl req -new -key "$KEY" -out "$CSR"
+            ;;
+        cert) # Generate a self-signed TLS certificate
+            KEY=${2:-$SSL_PRIVATE_KEY}
+            CSR=${3:-$SSL_CSR}
+            CERT=${4:-$SSL_CERT}
+            openssl x509 -req -days 365 -signkey "$KEY" -in "$CSR" -out "$CERT"
+            ;;
+    esac
 }
 
-h() {
-  local bins=(
-    stylish-haskell
-    ghcid
-    hdevtools
-    hlint
-    hoogle
-    shake
-  )
-
+sshx () {
   case "$1" in
-    tools)
-      echo "Installing tooling..."
-      stack build --copy-compiler-tool "${bins[@]}"
+    fingerprint)
+      ssh-keygen -E md5 -lf "$2"
+      ;;
+    public-key)
+      ssh-keygen -y -f "$2"
       ;;
     *)
-      echo "Unknown command $@"
-      return 1
+      echo "Unknown command"
       ;;
   esac
 }
 
-###############################################################################
-# Go
-###############################################################################
-
-###############################################################################
-# Run 'goimports' on all *.go files in directory.
-###############################################################################
-gimps(){
-    find ! -readable -prune -name '*.go'  -exec goimports -w {} \;
+# ipv4 address for $1
+ipv4addr() {
+    ip -4 addr show dev "$1" | sed -n 's/^ *inet *\([.0-9]\+\).*/\1/p'
 }
 
+# Print the (hostname,ens3 IPv4 address) tuple for the given interface.
+inet_addrs() {
+    local IFACE=$1
+    local HOST=$2
+    ssh -T $HOST <<-EOH
+    /usr/sbin/ip addr show $IFACE | \
+        grep 'inet\b' | \
+        awk '{print \$2}' | \
+        cut -d/ -f1
+EOH
+}
+
+wifictl (){
+	case "$1" in
+		on)
+			nmcli nm wifi on
+			;;
+		off)
+			nmcli nm wifi off
+			;;
+		flap)
+			nmcli nm wifi off && nmcli nm wifi on
+			;;
+	esac
+}
+
+# Upload some essential dotfiles to the remote server
+updots(){
+  # Prefix files with '$HOME/'
+	HOST="$1"
+	REMOTE_USER="${2:-jdobbinsbucklad}"
+  DEST=/home/"$REMOTE_USER"/
+  echo "Uploading ${DOTFILES[@]} to $REMOTE_USER@$HOST:$DEST"
+  rsync -avzL "${DOTFILES[@]}" "$REMOTE_USER@$HOST:$DEST"
+	# Setup TPM
+	echo "Setting up TMUX Plugin manager"
+	local tpm_dir="$REMOTE_USER/.tmux/plugins/"
+	ssh "$REMOTE_USER@$HOST" mkdir -p $tpm_dir
+	rsync -avz ~/.tmux/plugins/tpm "$REMOTE_USER@$HOST:$tpm_dir"
+	# This has become a *lot* of files:
+	# rsync -avz ~/.vim "$REMOTE_USER@$HOST:$DEST"
+}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Networking
 ###############################################################################
-# Print the Go package for the cwd.
-# Example: ~/go/src/github.com/jad-b/repo => github.com/jad-b/repo
+
 ###############################################################################
-gopkg() {
-	local cwd=$(pwd)
-	if [[ $cwd == ~/go/src* ]]; then
-		echo "${cwd#~/go/src/}"
-	fi
-}
-
-
-# Git
-alias g="git"
-alias push="git push"
-alias pull="git pull"
-
-# Configure repo to be me
-git-me() {
-	git config user.email j.american.db@gmail.com
-	git config user.name "Jeremy Dobbins-Bucklad"
-	git config user.signingkey E180BC0A
-}
-
-# Upgrade every Git repo under a directory name using 'git-up'
-gitemup() {
-    printf "Updating git repos in %s..." "$1"
-    for repo in $1/*/; do
-        ( cd $repo && git up 2>/dev/null &) 1>/dev/null
-    done
-    wait
-    echo "Done."
-}
-
-# Terraform
-alias tf='terraform'
-
-# Vagrant
-alias valias='grep vagrant ~/.bash_aliases'
-alias v='vagrant'
-alias vb='vagrant box'
-alias vbl='vagrant box list'
-alias vdes='vagrant destroy -f'
-alias vhalt='vagrant halt'
-alias vup='vagrant up'
-alias vpro='vagrant provision'
-alias vre='vagrant reload'
-alias vsh='vagrant ssh'
-alias vgs='vagrant global-status'
-alias vs='vagrant status'
+# Crypto
 
 # Make a base64 encoded secret
 mksecret(){ echo "$1" | openssl dgst -binary -sha1 | openssl base64; }
@@ -583,51 +476,172 @@ untargpg() {
         echo "Failed to decrypt/extract $1"
     fi
 }
-
-
-
+# Crypto
 ###############################################################################
-# Common TLS operations
+
+#=============================================================================#
+# Programming Languages
+#-----------------------------------------------------------------------------#
 ###############################################################################
-tls() {
-    local SSL_PRIVATE_KEY=privatekey.pem
-    local SSL_CSR=csr.pem
-    local SSL_CERT=server.crt
-    case "$1" in
-        view) # Display a cert, even in encoded .pem format.
-            openssl x509 -in "$2" -text -noout
-            ;;
-		view-bundle) # Display a concatenated list of certs in a file
-			openssl crl2pkcs7 -nocrl -certfile "$2" |\
-			openssl pkcs7 -print_certs -text -noout
-			;;
-        server) # Open a TLS connection to a live server; $2 should be 'host:port'
-            openssl s_client -connect "$2:${3:-443}" -showcerts -servername "$2"
-            ;;
-		compare) # Check a public cert and private key for compatibility
-			openssl x509 -noout -modulus -in "$2" | openssl md5;\
-			openssl rsa -noout -modulus -in "$3" | openssl md5
-			# Pipe through 'uniq' for a quick view of any differences
-			;;
-        key) # Generate a TLS key
-            KEY=${2:-$SSL_PRIVATE_KEY};
-            STRENGTH=${3:-2048};
-            openssl genrsa "$STRENGTH" > "$KEY"
-            ;;
-        csr) # Generate a Certificate Signing Request
-            KEY=${2:-$SSL_PRIVATE_KEY}
-            CSR=${3:-$SSL_CSR}
-            openssl req -new -key "$KEY" -out "$CSR"
-            ;;
-        cert) # Generate a self-signed TLS certificate
-            KEY=${2:-$SSL_PRIVATE_KEY}
-            CSR=${3:-$SSL_CSR}
-            CERT=${4:-$SSL_CERT}
-            openssl x509 -req -days 365 -signkey "$KEY" -in "$CSR" -out "$CERT"
-            ;;
-    esac
+# Git
+###############################################################################
+alias g="git"
+alias push="git push"
+alias pull="git pull"
+alias cm="git cm"
+
+# Configure repo to be me
+git-me() {
+	git config user.email $EMAIL
+	git config user.name $NAME
+	# git config user.signingkey E180BC0A
 }
 
+# Upgrade every Git repo under a directory name using 'git-up'
+gitemup() {
+    printf "Updating git repos in %s..." "$1"
+    for repo in $1/*/; do
+        ( cd $repo && git up 2>/dev/null &) 1>/dev/null
+    done
+    wait
+    echo "Done."
+}
+
+###############################################################################
+# Go
+###############################################################################
+if [ -d /usr/local/go ]; then
+    export GOPATH="${HOME}"
+    export GOMAXPROCS=$(nproc)
+    export PATH="/usr/local/go/bin:${GOPATH}/bin:${PATH}"
+fi
+
+###############################################################################
+# Haskell
+###############################################################################
+# Haskell
+if hash stack 2>/dev/null; then
+	eval "$(stack --bash-completion-script stack)"
+fi
+
+shake() {
+  local shakefile="$(find $(git rev-parse --show-toplevel) -name Build.hs -type f \
+    | head -n1)"
+  cd "$(dirname ${shakefile})"
+  stack exec -- ./build.sh "$@"
+}
+
+h() {
+  local bins=(
+    stylish-haskell
+    ghcid
+    hdevtools
+    hlint
+    hoogle
+    shake
+  )
+
+  case "$1" in
+    tools)
+      echo "Installing tooling..."
+      stack build --copy-compiler-tool "${bins[@]}"
+      ;;
+    *)
+      echo "Unknown command $@"
+      return 1
+      ;;
+  esac
+}
+
+###############################################################################
+# Nix
+###############################################################################
+NIX_DIR="${HOME}/.nix-profile/etc/profile.d/nix.sh"
+
+if [ -d "${NIX_DIR}" ]; then
+  . "${NIX_DIR}"
+fi
+
+###############################################################################
+# NodeJS
+###############################################################################
+export NVM_DIR="$HOME/.nvm"
+
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+if hash npm 2>/dev/null; then
+    NPM_PACKAGES="${HOME}/.npm-global"
+    export PATH="${NPM_PACKAGES}/bin:${PATH}"
+    unset MANPATH
+    export MANPATH="${NPM_PACKAGES}/share/man:$(manpath)"
+    # export NODE_PATH="${NPM_PACKAGES}/lib/node_modules:${NODE_PATH}"
+fi
+
+###############################################################################
+# Python
+###############################################################################
+export PYTHONDONTWRITEBYTECODE=true
+
+alias py3='python3'
+# Expand Python file trees, w/o showing stupid .pyc files
+alias pytree='tree -I *.pyc --prune .'
+# Pip
+alias pipu='pip2 install --user'
+alias pip3u='pip3 install --user'
+# Uninstall every Python package
+alias pipclear='pip freeze | grep -v "^-e" | xargs pip uninstall -y'
+# Delete all __pycache__/.pyc files
+alias rmpyc="find . -name __pycache__ -type d -delete -o -name '*.pyc' -type f -delete"
+# IPython, you so *handy*
+alias ipy=ipython3
+
+# Pyenv
+if hash pyenv 2>/dev/null; then
+    export PYENV_ROOT="${HOME}/.pyenv"
+    export PATH="${PYENV_ROOT}/bin:${PATH}"
+    if [ -d "${PYENV_ROOT}" ]; then
+        eval "$(pyenv init -)"
+    fi
+    if [ -d "${PYENV_ROOT}/plugins/pyenv-virtualenv" ]; then
+        eval "$(pyenv virtualenv-init -)"
+    fi
+fi
+
+# Python virtualenvwrapper
+if hash virtualenv 2>/dev/null; then
+    export WORKON_HOME=~/.venv
+    export PROJECT_HOME=~/dev
+fi
+
+###############################################################################
+# Rust
+###############################################################################
+if [ -d ~/.cargo ]; then
+    export PATH="${HOME}/.cargo/bin:${PATH}"
+fi
+
+#-----------------------------------------------------------------------------#
+# Programming Languages
+#=============================================================================#
+
+#=============================================================================#
+# Tools
+#-----------------------------------------------------------------------------#
+###############################################################################
+# Auto-Completion
+# Array of files within .completions
+COMPLETIONS=(~/.completions/*)
+# Source all our files
+for i in "${COMPLETIONS[@]}"; do
+    # echo "Sourcing $i ..."
+    if [ -e "$i" ]; then
+        # echo ">> Sourced $i"
+        . "$i"
+    fi
+done
+
+# pre_complete=$(now)
 pre_auto_complete=$(now)
 # printf "Before alias completions %s\n" "$(time_since "$pre_auto_complete")"
 # Automatically add completion for all aliases to commands having completion functions
@@ -699,3 +713,55 @@ function alias_completion {
     source "$tmp_file" && rm -f "$tmp_file"
 }; # alias_completion
 # printf "Loaded alias completions in %s\n" "$(time_since "$pre_auto_complete")"
+
+# Auto-Completion
+###############################################################################
+
+###############################################################################
+# FZF
+###############################################################################
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+
+###############################################################################
+# Google Cloud Platform
+###############################################################################
+GCLOUD_SDK="$HOME/jdb/.local/google-cloud-sdk"
+if [ -e "$GCLOUD_SDK" ]; then
+	# The next line updates PATH for the Google Cloud SDK.
+	source "$GCLOUD_SDK/path.bash.inc"
+
+	# The next line enables shell command completion for gcloud.
+	source "$GLOUC_SDK/completion.bash.inc"
+fi
+
+###############################################################################
+# OCI
+###############################################################################
+[[ -e "/home/${USER}/.oci/lib/python3.6/site-packages/oci_cli/bin/oci_autocomplete.sh" ]] \
+  && source "/home/${USER}/.oci/lib/python3.6/site-packages/oci_cli/bin/oci_autocomplete.sh"
+# printf "Sourced completions in %s\n" "$(time_since "$# pre_complete")"
+
+###############################################################################
+# Terraform
+###############################################################################
+alias tf='terraform'
+
+###############################################################################
+# Vagrant
+###############################################################################
+alias v='vagrant'
+alias valias='grep vagrant ~/.bash_aliases'
+alias vb='vagrant box'
+alias vbl='vagrant box list'
+alias vdes='vagrant destroy -f'
+alias vgs='vagrant global-status'
+alias vhalt='vagrant halt'
+alias vpro='vagrant provision'
+alias vre='vagrant reload'
+alias vs='vagrant status'
+alias vsh='vagrant ssh'
+alias vup='vagrant up'
+
+#-----------------------------------------------------------------------------#
+# Tools
+#=============================================================================#

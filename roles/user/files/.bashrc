@@ -5,6 +5,7 @@
 # For functions/aliases, see ~/.bash_aliases
 # For modifying your terminal environment ($PATH, sourcing), see ~/.bash_profile
 
+set -u
 set -P
 set -o pipefail
 
@@ -152,37 +153,3 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
-
-###############################################################################
-# CLI Completion Scripts
-###############################################################################
-# Array of files within .completions
-# pre_complete=$(now)
-COMPLETIONS=(~/.completions/*)
-# Source all our files
-for i in "${source_files[@]}" "${COMPLETIONS[@]}"; do
-    # echo "Sourcing $i ..."
-    if [ -e "$i" ]; then
-        # echo ">> Sourced $i"
-        . "$i"
-    fi
-done
-# Google Cloud Platform
-GCLOUD_SDK="$HOME/jdb/.local/google-cloud-sdk"
-if [ -e "$GCLOUD_SDK" ]; then
-	# The next line updates PATH for the Google Cloud SDK.
-	source "$GCLOUD_SDK/path.bash.inc"
-
-	# The next line enables shell command completion for gcloud.
-	source "$GLOUC_SDK/completion.bash.inc"
-fi
-
-[[ -e "/home/${USER}/.oci/lib/python3.6/site-packages/oci_cli/bin/oci_autocomplete.sh" ]] && source "/home/${USER}/.oci/lib/python3.6/site-packages/oci_cli/bin/oci_autocomplete.sh"
-
-# printf "Sourced completions in %s\n" "$(time_since "$# pre_complete")"
-
-[ -f ~/.fzf.bash ] && source ~/.fzf.bash
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
