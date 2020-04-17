@@ -171,12 +171,17 @@ work() {
 }
 
 ###############################################################################
-# String
+# String functions
 ###############################################################################
 joinString() {
 	local IFS="$1"
 	shift
 	printf "%s" "$*"
+}
+
+# Removes ASCII control characters
+lose_control() {
+  sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"
 }
 
 # Pulls out the version from a string
