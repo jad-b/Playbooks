@@ -1,6 +1,6 @@
 #!/bin/bash
 # vim: filetype=sh
-set -u
+# set -u
 
 # Set default permissions
 # User can do anything

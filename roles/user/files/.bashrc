@@ -5,7 +5,7 @@
 # For functions/aliases, see ~/.bash_aliases
 # For modifying your terminal environment ($PATH, sourcing), see ~/.bash_profile
 
-set -u
+# set -u
 set -P
 set -o pipefail
 
