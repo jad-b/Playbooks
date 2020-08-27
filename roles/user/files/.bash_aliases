@@ -348,37 +348,37 @@ tls() {
     local SSL_CSR=csr.pem
     local SSL_CERT=server.crt
     case "$1" in
-        view) # Display a cert, even in encoded .pem format.
-            openssl x509 -in "$2" -text -noout
-            ;;
-		view-bundle) # Display a concatenated list of certs in a file
-			openssl crl2pkcs7 -nocrl -certfile "$2" |\
-			openssl pkcs7 -print_certs -text -noout
-			;;
-        server) # Open a TLS connection to a live server; $2 should be 'host:port'
-            openssl s_client -connect "$2:${3:-443}" -showcerts -servername "$2"
-            ;;
-		compare) # Check a public cert and private key for compatibility
-			openssl x509 -noout -modulus -in "$2" | openssl md5;\
-			openssl rsa -noout -modulus -in "$3" | openssl md5
-			# Pipe through 'uniq' for a quick view of any differences
-			;;
-        key) # Generate a TLS key
-            KEY=${2:-$SSL_PRIVATE_KEY};
-            STRENGTH=${3:-2048};
-            openssl genrsa "$STRENGTH" > "$KEY"
-            ;;
-        csr) # Generate a Certificate Signing Request
-            KEY=${2:-$SSL_PRIVATE_KEY}
-            CSR=${3:-$SSL_CSR}
-            openssl req -new -key "$KEY" -out "$CSR"
-            ;;
-        cert) # Generate a self-signed TLS certificate
-            KEY=${2:-$SSL_PRIVATE_KEY}
-            CSR=${3:-$SSL_CSR}
-            CERT=${4:-$SSL_CERT}
-            openssl x509 -req -days 365 -signkey "$KEY" -in "$CSR" -out "$CERT"
-            ;;
+      view) # Display a cert, even in encoded .pem format.
+        openssl x509 -in "$2" -text -noout
+        ;;
+      view-bundle) # Display a concatenated list of certs in a file
+        openssl crl2pkcs7 -nocrl -certfile "$2" |\
+        openssl pkcs7 -print_certs -text -noout
+        ;;
+      server) # Open a TLS connection to a live server; $2 should be 'host:port'
+        openssl s_client -connect "$2:${3:-443}" -showcerts -servername "$2"
+        ;;
+      compare) # Check a public cert and private key for compatibility
+        openssl x509 -noout -modulus -in "$2" | openssl md5;\
+        openssl rsa -noout -modulus -in "$3" | openssl md5
+        # Pipe through 'uniq' for a quick view of any differences
+        ;;
+      key) # Generate a TLS key
+        KEY=${2:-$SSL_PRIVATE_KEY};
+        STRENGTH=${3:-2048};
+        openssl genrsa "$STRENGTH" > "$KEY"
+        ;;
+      csr) # Generate a Certificate Signing Request
+        KEY=${2:-$SSL_PRIVATE_KEY}
+        CSR=${3:-$SSL_CSR}
+        openssl req -new -key "$KEY" -out "$CSR"
+        ;;
+      cert) # Generate a self-signed TLS certificate
+        KEY=${2:-$SSL_PRIVATE_KEY}
+        CSR=${3:-$SSL_CSR}
+        CERT=${4:-$SSL_CERT}
+        openssl x509 -req -days 365 -signkey "$KEY" -in "$CSR" -out "$CERT"
+        ;;
     esac
 }
 
@@ -777,17 +777,25 @@ if [ -e "$GCLOUD_SDK" ]; then
 	source "$GLOUC_SDK/completion.bash.inc"
 fi
 
-###############################################################################
-# OCI
-###############################################################################
-[[ -e "/home/${USER}/.oci/lib/python3.6/site-packages/oci_cli/bin/oci_autocomplete.sh" ]] \
-  && source "/home/${USER}/.oci/lib/python3.6/site-packages/oci_cli/bin/oci_autocomplete.sh"
 # printf "Sourced completions in %s\n" "$(time_since "$# pre_complete")"
 
 ###############################################################################
 # Terraform
 ###############################################################################
-alias tf='terraform'
+tf() {
+  case "$1" in
+    download)
+      local version="$2"
+      local zipdest="/tmp/terraform.zip"
+      curl -o "${zipdest}" "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_linux_amd64.zip"
+      unzip -o -d ~/.local/bin "${zipdest}"
+      rm "${zipdest}"
+      ;;
+    *)
+      terraform "$@"
+      ;;
+  esac
+}
 
 ###############################################################################
 # Vagrant
