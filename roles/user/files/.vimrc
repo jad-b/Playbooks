@@ -114,9 +114,13 @@ let g:ansible_options = {'ignore_blank_lines': 0}
 
 " fzf
 set rtp+=~/src/github.com/junegunn/fzf
-nnoremap <C-p> :FZF <CR>
-nnoremap <leader>f :FZF ~<CR>
-nnoremap <leader>g :FZF system("git rev-parse --show-toplevel")<CR>
+nnoremap <C-p> :Files<CR>
+nnoremap <C-g> :GFiles<CR>
+nnoremap <C-b> :Buffers<CR>
+nnoremap <C-F> :Buffers<CR>
+
+" ripgrep
+nnoremap <C-f> :Rg!
 
 " UltiSnips setting
 " mae vim recognizing snippets dir
@@ -139,6 +143,9 @@ let g:UltiSnipsJumpBackwardTrigger="<c-z>"
 
 let g:netrw_liststyle=3
 let g:netrw_winsize=30
+" Preventing netrw from NEVER CLOSING
+" https://github.com/tpope/vim-vinegar/issues/13#issuecomment-489440040
+let g:netrw_fastbrowse=0
 
 " Show docstrings for folded code
 " let g:SimpylFold_docstring_preview=1

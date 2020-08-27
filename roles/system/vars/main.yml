@@ -9,7 +9,6 @@ apps:
   - git
   - gnome-shell-extensions
   - chrome-gnome-shell
-  - google-chrome-stable
   - htop
   - jq
   - meld

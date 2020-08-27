@@ -1,0 +1,11 @@
+---
+- name: Add deadsnakes ppa
+  apt_repository:
+    repo: "ppa:deadsnakes/ppa"
+    mode: "0664"
+
+- name: Install Python
+  apt:
+    name: "python{{ python_lang.version }}"
+    state: latest
+    update_cache: yes

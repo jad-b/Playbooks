@@ -12,3 +12,5 @@ templates:
     author-email: j.american.db@gmail.com
     copyright: MPLv2.0
     github-username: jad-b
+ghc-options:
+  "$everything": -haddock

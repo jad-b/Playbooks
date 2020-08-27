@@ -1,15 +1,19 @@
 ---
-- include: rust.yml
-  tags: rust
-
-# - include: julia.yml
-#   tags: julia
-
 - include: go.yml
   tags: go
 
 - include: haskell.yml
   tags: haskell
 
-  # - include: node.yml
-  #   tags: node
+# - include: julia.yml
+#   tags: julia
+
+# - include: node.yml
+#   tags: node
+
+- include: python.yml
+  tags: python
+  become: yes
+
+- include: rust.yml
+  tags: rust

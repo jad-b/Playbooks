@@ -3,7 +3,6 @@
   apt_key:
     url: "{{ item }}"
   with_items:
-    - https://dl.google.com/linux/linux_signing_key.pub
     - https://download.opensuse.org/repositories/home:kozec/xUbuntu_16.04/Release.key
     - https://eddie.website/repository/keys/eddie_maintainer_gpg.key
     - https://syncthing.net/release-key.txt
@@ -14,13 +13,12 @@
 - name: Add special Apt repos
   apt_repository:
     repo: "{{ item }}"
-    mode: 0664
+    mode: "0664"
   with_items:
-    - 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main'
     - 'deb [arch=amd64] https://wire-app.wire.com/linux/debian stable main'
     - 'deb http://eddie.website/repository/apt stable main'
     - 'deb https://apt.syncthing.net/ syncthing stable'
-    - 'deb https://download.virtualbox.org/virtualbox/debian {{ ansible_lsb.codename }} contrib'
+    - 'deb [arch=amd64] https://download.virtualbox.org/virtualbox/debian {{ ansible_lsb.codename }} contrib'
     - 'ppa:neovim-ppa/stable'
     - 'ppa:nilarimogard/webupd8'
     - 'ppa:teejee2008/ppa'
@@ -31,12 +29,19 @@
     state: latest
     update_cache: yes
 
+- name: Install new packages from debian
+  apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - "https://dl.google.com/google-chrome-stable_current_amd64.deb"
+
 - name: dist-upgrade Apt packages
   apt:
     upgrade: dist
 
 - name: Install snaps
   snap:
-    name:
-      - slack
+    name: slack
     classic: yes

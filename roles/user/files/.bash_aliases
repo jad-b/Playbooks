@@ -55,6 +55,7 @@ if hash nvim 2>/dev/null; then
   alias vim=nvim
   export EDITOR=nvim
 else
+  echo "Warning! nvim not detected"
   export EDITOR=vim
 fi
 
@@ -168,6 +169,19 @@ work() {
   printf "pushd: "
   pushd "${results[0]}"
 	tmux rename-window "$project"
+}
+
+_set_term_colors() {
+  local color="${1}"
+  ~/gnome-terminal-colors-solarized/set_${color}.sh jdb --skip-dircolors
+}
+
+light() {
+  _set_term_colors light
+}
+
+dark() {
+  _set_term_colors dark
 }
 
 ###############################################################################
@@ -558,6 +572,19 @@ h() {
   esac
 }
 
+# Workaround for local Hoogle breakage after upgrading from LTS 14.7 -> 16.9
+hoogl() {
+  local LOCAL_DOC_ROOT=$(stack path --local-doc-root)
+  local SNAPSHOT_DOC=$(stack path --snapshot-doc-root)
+  local DATABASE="$(stack path --local-hoogle-root)/database.foo"
+
+  stack haddock
+
+  stack exec -- hoogle generate --local=$LOCAL_DOC_ROOT --local=$SNAPSHOT_DOC --database=$DATABASE
+
+  stack hoogle -- server --local --port=8080 --database=$DATABASE
+}
+
 ###############################################################################
 # Nix
 ###############################################################################
@@ -734,6 +761,9 @@ function alias_completion {
 # FZF
 ###############################################################################
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
+
+# git-fuzzy
+export PATH="/home/jdb/src/github.com/git-fuzzy/bin:$PATH"
 
 ###############################################################################
 # Google Cloud Platform

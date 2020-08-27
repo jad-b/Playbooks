@@ -52,6 +52,7 @@
 [color]
     ui = auto
 [core]
+    pager = delta --plus-color="#012800" --minus-color="#340001" --theme='Monokai Extended'
     editor = vim
     excludesfile = ~/.gitignore
 [credential]
@@ -62,6 +63,8 @@
     prompt = false
 [help]
     autocorrect = 1
+[interactive]
+    diffFilter = delta --color-only
 [push]
     default = current
 [web]
