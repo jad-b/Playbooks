@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 # vim: filetype=sh
 # Section syntax:
 # Single block:
@@ -64,7 +64,7 @@ alias ll='ls -alFhtA'
 alias la='ls -A'
 alias l='ls -CF'
 
-# Usage: cat file.txt | xclipD
+# Usage: cat file.txt | xclipd
 alias xclipd='xclip -selection clipboard'
 
 # Overrides the 'open' command
