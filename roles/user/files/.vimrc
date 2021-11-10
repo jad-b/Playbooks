@@ -116,8 +116,7 @@ let g:ansible_options = {'ignore_blank_lines': 0}
 set rtp+=~/src/github.com/junegunn/fzf
 nnoremap <C-p> :Files<CR>
 nnoremap <C-g> :GFiles<CR>
-nnoremap <C-b> :Buffers<CR>
-nnoremap <C-F> :Buffers<CR>
+nnoremap <M-b> :Buffers<CR>
 
 " ripgrep
 nnoremap <C-f> :Rg!
@@ -348,6 +347,7 @@ set conceallevel=2
 " Solarized
 syntax enable
 set background=dark
+" set background=light
 colorscheme solarized
 
 " Mouse

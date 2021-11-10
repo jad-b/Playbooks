@@ -1,4 +1,4 @@
-#!/bin/bash
+#/bin/bash
 # vim: filetype=sh
 # Section syntax:
 # Single block:
@@ -64,7 +64,7 @@ alias ll='ls -alFhtA'
 alias la='ls -A'
 alias l='ls -CF'
 
-# Usage: cat file.txt | xclipd
+# Usage: cat file.txt | xclipD
 alias xclipd='xclip -selection clipboard'
 
 # Overrides the 'open' command
@@ -126,6 +126,10 @@ map(){
 	done
 }
 
+errcho() {
+  >&2 echo $@
+}
+
 # Kill all listed tmux sessions
 tmux-kill(){
     for i in "$@"; do
@@ -173,7 +177,7 @@ work() {
 
 _set_term_colors() {
   local color="${1}"
-  ~/gnome-terminal-colors-solarized/set_${color}.sh jdb --skip-dircolors
+  ~/gnome-terminal-colors-solarized/set_${color}.sh $(whoami) --skip-dircolors
 }
 
 light() {
@@ -207,6 +211,37 @@ whatver(){
 #=============================================================================#
 
 ###############################################################################
+# Processes
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+proc() {
+  case "$1" in
+    port) # Get process at port x
+      lsof -i :"$2"
+      ;;
+    pid) # Given pid, name the process
+      ps -l -p"$2"
+      ;;
+    kids) # Number of child processes
+      pgrep -c -P"$2"
+      ;;
+  esac
+}
+
+threads() {
+  case "$1" in
+    total)
+      ps -elfT | wc -l
+      ;;
+    of)
+      cat /proc/"$2"/status | grep -i Threads
+      ;;
+  esac
+}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Processes
+###############################################################################
+
+###############################################################################
 # Filesystem
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Important variable exports
@@ -222,6 +257,23 @@ dotfiles=(
 )
 # Prefix with absolute path
 export DOTFILES=( "${dotfiles[@]/#/$HOME/}" )
+
+# Upload some essential dotfiles to the remote server
+updots(){
+  # Prefix files with '$HOME/'
+	HOST="$1"
+	REMOTE_USER="${2:-jdobbinsbucklad}"
+  DEST=/home/"$REMOTE_USER"/
+  echo "Uploading ${DOTFILES[@]} to $REMOTE_USER@$HOST:$DEST"
+  rsync -avzL "${DOTFILES[@]}" "$REMOTE_USER@$HOST:$DEST"
+	# Setup TPM
+	echo "Setting up TMUX Plugin manager"
+	local tpm_dir="$REMOTE_USER/.tmux/plugins/"
+	ssh "$REMOTE_USER@$HOST" mkdir -p $tpm_dir
+	rsync -avz ~/.tmux/plugins/tpm "$REMOTE_USER@$HOST:$tpm_dir"
+	# This has become a *lot* of files:
+	# rsync -avz ~/.vim "$REMOTE_USER@$HOST:$DEST"
+}
 
 # Make mount command output pretty and human readable format
 alias mount='mount |column -t'
@@ -245,7 +297,7 @@ fixperms() {
 }
 
 mine(){
-    sudo chown -R jdb:jdb "${1:-.}"
+    sudo chown -R $USER:$USER "${1:-.}"
 }
 
 yours() {
@@ -298,6 +350,12 @@ latest(){
 #   Descending list of ten largest files/directories
 top10(){
     sudo du -hx "${1:-.}" | sort -rh | head -10
+}
+
+mins() {
+  minutes=$(date -Iminutes)
+  echo ${minutes} | xclipd
+  echo ${minutes}
 }
 
 # Make a copy of a file with the timestamp suffixed
@@ -426,23 +484,6 @@ wifictl (){
 			;;
 	esac
 }
-
-# Upload some essential dotfiles to the remote server
-updots(){
-  # Prefix files with '$HOME/'
-	HOST="$1"
-	REMOTE_USER="${2:-jdobbinsbucklad}"
-  DEST=/home/"$REMOTE_USER"/
-  echo "Uploading ${DOTFILES[@]} to $REMOTE_USER@$HOST:$DEST"
-  rsync -avzL "${DOTFILES[@]}" "$REMOTE_USER@$HOST:$DEST"
-	# Setup TPM
-	echo "Setting up TMUX Plugin manager"
-	local tpm_dir="$REMOTE_USER/.tmux/plugins/"
-	ssh "$REMOTE_USER@$HOST" mkdir -p $tpm_dir
-	rsync -avz ~/.tmux/plugins/tpm "$REMOTE_USER@$HOST:$tpm_dir"
-	# This has become a *lot* of files:
-	# rsync -avz ~/.vim "$REMOTE_USER@$HOST:$DEST"
-}
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Networking
 ###############################################################################
@@ -516,14 +557,18 @@ git-me() {
 	# git config user.signingkey E180BC0A
 }
 
-# Upgrade every Git repo under a directory name using 'git-up'
-gitemup() {
-    printf "Updating git repos in %s..." "$1"
-    for repo in $1/*/; do
-        ( cd $repo && git up 2>/dev/null &) 1>/dev/null
-    done
-    wait
-    echo "Done."
+gitfresh() {
+  for br in $(git branch); do
+    git checkout ${br} \
+      && git pull origin master
+  done
+}
+
+pullall() {
+  local git_directories=$(find . -type d -exec test -e '{}'/.git \; -print)
+  for d in ${git_directories[@]}; do
+    (cd ${d} && git pull)
+  done
 }
 
 ###############################################################################
@@ -616,6 +661,11 @@ if compgen -G "${yarn_pattern}"; then
   # TODO sort descending to get the latest
   yarns=( ${yarn_pattern} )
   export PATH="${yarns[0]}/bin:${PATH}"
+fi
+
+LOCAL_NODE_MODS="${HOME}/.local/node_modules/.bin"
+if [[ -d ${LOCAL_NODE_MODS} ]]; then
+  export PATH="${LOCAL_NODE_MODS}:${PATH}"
 fi
 
 ###############################################################################

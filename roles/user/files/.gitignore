@@ -1,3 +1,5 @@
 # Ignore potential private keys
 *.pem
 id_rsa*
+
+.factorypath
