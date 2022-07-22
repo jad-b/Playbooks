@@ -153,3 +153,17 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+
+# SSH Agent
+if ! pgrep -u "$USER" ssh-agent > /dev/null; then
+  echo "starting ssh agent"
+  ssh-agent > "$XDG_RUNTIME_DIR/ssh-agent.env"
+  source "$XDG_RUNTIME_DIR/ssh-agent.env" # >/dev/null
+  # Load SSH keys
+  for key in ~/.ssh/*.key; do
+    ssh-add ${key}
+  done
+fi
+source "$XDG_RUNTIME_DIR/ssh-agent.env" # >/dev/null

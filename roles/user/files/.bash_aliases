@@ -48,7 +48,7 @@ done
 alias rals='. ~/.bash_aliases'
 alias rebash='. ~/.bash_profile'
 
-alias grep='rg'
+# alias grep='rg'
 
 if hash nvim 2>/dev/null; then
   alias vi=nvim
@@ -177,7 +177,7 @@ work() {
 
 _set_term_colors() {
   local color="${1}"
-  ~/gnome-terminal-colors-solarized/set_${color}.sh $(whoami) --skip-dircolors
+  ~/src/github/gnome-terminal-colors-solarized/set_${color}.sh $(whoami) --skip-dircolors
 }
 
 light() {
@@ -205,6 +205,11 @@ lose_control() {
 # Pulls out the version from a string
 whatver(){
 	sed -s -n 's/^.*\([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/p' <<< "$1"
+}
+
+# Show a by-charcter diff
+chardiff() {
+  git diff --no-index --color-words=. "$1" "$2"
 }
 #-----------------------------------------------------------------------------#
 # Utility Functions
@@ -354,7 +359,7 @@ top10(){
 
 mins() {
   minutes=$(date -Iminutes)
-  echo ${minutes} | xclipd
+  echo -n ${minutes} | xclipd
   echo ${minutes}
 }
 
@@ -401,41 +406,50 @@ snr() {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Common TLS operations
+# Common TLS operations
 tls() {
-    local SSL_PRIVATE_KEY=privatekey.pem
-    local SSL_CSR=csr.pem
-    local SSL_CERT=server.crt
-    case "$1" in
+    local ssl_private_key=privatekey.pem
+    local ssl_csr=csr.pem
+    local ssl_cert=server.crt
+    local operation="$1"
+
+    case "${operation}" in
       view) # Display a cert, even in encoded .pem format.
-        openssl x509 -in "$2" -text -noout
+        local cert="$2"
+        openssl x509 -in "${cert}" -text -noout
         ;;
       view-bundle) # Display a concatenated list of certs in a file
-        openssl crl2pkcs7 -nocrl -certfile "$2" |\
-        openssl pkcs7 -print_certs -text -noout
+        local cert="$2"
+        openssl crl2pkcs7 -nocrl -certfile "${cert}" \
+          | openssl pkcs7 -print_certs -text -noout
         ;;
       server) # Open a TLS connection to a live server; $2 should be 'host:port'
-        openssl s_client -connect "$2:${3:-443}" -showcerts -servername "$2"
+        local hostname="$2"
+        local port="${3:-443}"
+        openssl s_client -connect "${hostname}:${port}" -showcerts -servername "${hostname}"
         ;;
       compare) # Check a public cert and private key for compatibility
-        openssl x509 -noout -modulus -in "$2" | openssl md5;\
-        openssl rsa -noout -modulus -in "$3" | openssl md5
+        local public_cert="$2"
+        local private_key="$3"
+        openssl x509 -noout -modulus -in "${public_cert}" | openssl md5
+        openssl rsa -noout -modulus -in "${private_key}" | openssl md5
         # Pipe through 'uniq' for a quick view of any differences
         ;;
       key) # Generate a TLS key
-        KEY=${2:-$SSL_PRIVATE_KEY};
-        STRENGTH=${3:-2048};
-        openssl genrsa "$STRENGTH" > "$KEY"
+        local key=${2:-$ssl_private_key};
+        local strength=${3:-2048};
+        openssl genrsa "$strength" > "$key"
         ;;
       csr) # Generate a Certificate Signing Request
-        KEY=${2:-$SSL_PRIVATE_KEY}
-        CSR=${3:-$SSL_CSR}
-        openssl req -new -key "$KEY" -out "$CSR"
+        local key=${2:-$ssl_private_key}
+        local csr=${3:-$ssl_csr}
+        openssl req -new -key "$key" -out "$csr"
         ;;
       cert) # Generate a self-signed TLS certificate
-        KEY=${2:-$SSL_PRIVATE_KEY}
-        CSR=${3:-$SSL_CSR}
-        CERT=${4:-$SSL_CERT}
-        openssl x509 -req -days 365 -signkey "$KEY" -in "$CSR" -out "$CERT"
+        local key=${2:-$ssl_private_key}
+        local csr=${3:-$ssl_csr}
+        local cert=${4:-$ssl_cert}
+        openssl x509 -req -days 365 -signkey "$key" -in "$csr" -out "$cert"
         ;;
     esac
 }

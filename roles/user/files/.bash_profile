@@ -67,4 +67,4 @@ fi
 # cat tasks
 # ? How to close 'tasks'?
 
-echo "Week $(date +%W)"
+# echo "Week $(date +%W)"
