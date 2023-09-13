@@ -28,6 +28,8 @@ Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 " List open buffers
 Plug 'bling/vim-bufferline'
+" Tagbar
+Plug 'majutsushi/tagbar'
 " Fuzzy finder
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
@@ -166,6 +168,9 @@ let g:netrw_fastbrowse=0
 
 " Show docstrings for folded code
 " let g:SimpylFold_docstring_preview=1
+
+" ---------- tag-bar ----------
+nmap <F8> :TagbarToggle<CR>
 
 "
 " " Use K to show documentation in preview window.

@@ -1,0 +1,492 @@
+import logging
+import json
+import getpass
+from pprint import pprint
+
+import re
+from unicodedata import normalize
+import dns.name
+from CLI.cli_command import JiraCommand
+from dyn.tm.session import DynectSession
+from dyn.tm.zones import Zone, Node
+from dyn.tm.records import DNSRecord, TXTRecord
+from util import Util
+
+
+class DomainRecords:
+    def __init__(self, domain, ttl):
+        self.logger = logging.getLogger('DomainRecords')
+        self.zone = None
+        self.domain = domain
+        self.rrsets = {}
+        self.ttl = int(ttl)
+        self.region = None
+        # Zone hosted on OCI
+        self.is_oci = False
+        # Zone is self serviceable
+        self.is_self_service = False
+        # Zone hosted on Dynect
+        self.is_dyn = False
+        # If this is a non-regional glboal zone
+        self.is_global = False
+        # Homed region if the zone in cases where the zone does not exist in its realm's control plane
+        self.region_override = None
+        self.shep_regions = Util.get_shepherd_regions()
+        self.add_regional_info()
+
+    def to_json(self):
+        # to json
+        pass
+
+    def validate(self):
+        rrset.validate()
+        pass
+
+    def add_rrset(self, rtype, rdata):
+        if rtype in self.rrsets:
+            self.rrsets[rtype].append(rdata)
+        else:
+            self.rrsets[rtype] = [rdata]
+
+    def get_rrsets(self):
+        return self.rrsets
+
+    def get_rrsets_by_domain(self, fqdn):
+        for rrset in self.rrsets:
+            print(rrset)
+        return self.rrset[0]
+
+    def replace_rrsets(self, rrsets):
+        self.rrsets = rrsets
+
+    def ttl(self):
+        return self.ttl
+
+    def region(self):
+        return self.region
+
+    def domain(self):
+        return self.domain
+
+    def zone(self):
+        return self.zone
+
+    def is_dyn(self):
+        return self.is_dyn
+
+    def is_oci(self):
+        return self.is_oci
+
+    def is_global(self):
+        return self.is_global
+
+    def region_override(self):
+        return self.region_override
+
+    def __str__(self):
+        return "Zone: {}, Domain: {}, RRSets: {}, TTL: {}, Region: {}, region_override: {}, is_oci: {}, is_dyn: {}, is_global: {}, is_self_service: {}".format(
+        self.zone, 
+        self.domain, 
+        self.rrsets, 
+        self.ttl, 
+        self.region, 
+        self.region_override, 
+        self.is_oci, 
+        self.is_dyn, 
+        self.is_global, 
+        self.is_self_service
+        )
+    def __dict__(self):
+        return json.dumps(self)
+        
+
+    def to_jira_table(self):
+        to_string = ""
+        for rrset in self.rrsets:
+            for rtype, rdatas in self.rrsets.items():
+                for rdata in rdatas:
+                    to_string += "|{}|{}|{}|{}|{}|".format(self.domain, self.zone, rdata, self.ttl, rtype)
+        return to_string
+
+    def to_jira_table_with_validation(self, validation):
+        to_string = ""
+        for rrset in self.rrsets:
+            for rtype, rdatas in self.rrsets.items():
+                for rdata in rdatas:
+                    to_string += "|{}|{}|{}|{}|{}|{}|\n".format(self.domain, self.zone, rdata, self.ttl, rtype, validation)
+        return to_string
+
+    def add_regional_info(self):
+        dyn_tld_zones = [
+            # oracleiaas.com
+            "oracleiaas.com",
+            "r2.oracleiaas.com",
+            "mc1.oracleiaas.com",
+            "us-az-phoenix-1.oracleiaas.com",
+            "ap-mumbai-1.oracleiaas.com",
+            "ap-osaka-1.oracleiaas.com",
+            "ap-seoul-1.oracleiaas.com",
+            "ap-sydney-1.oracleiaas.com",
+            "ap-tokyo-1.oracleiaas.com",
+            "ca-montreal-1.oracleiaas.com",
+            "ca-toronto-1.oracleiaas.com",
+            "eu-amsterdam-1.oracleiaas.com",
+            "eu-frankfurt-1.oracleiaas.com",
+            "eu-zurich-1.oracleiaas.com",
+            "me-jeddah-1.oracleiaas.com",
+            "sa-saopaulo-1.oracleiaas.com",
+            "uk-london-1.oracleiaas.com",
+            "us-ashburn-1.oracleiaas.com",
+            "us-phoenix-1.oracleiaas.com",
+            "us-sanjose-1.oracleiaas.com",
+            "uk-cardiff-1.oracleiaas.com",
+            "sa-vinhedo-1.oracleiaas.com",
+            "me-dubai-1.oracleiaas.com",
+            "sa-santiago-1.oracleiaas.com",
+            "ap-melbourne-1.oracleiaas.com",
+            "ap-hyderabad-1.oracleiaas.com",
+            "ap-chuncheon-1.oracleiaas.com",
+            # oraclecloud.com
+            "eu-frankfurt-1.oraclecloud.com",
+            "uk-london-1.oraclecloud.com",
+            "us-ashburn-1.oraclecloud.com",
+            "us-phoenix-1.oraclecloud.com",
+            # OC 2/3/4
+            "oraclegoviaas.com",
+            "us-gov-ashburn-1.oraclegoviaas.com",
+            "us-gov-ashburn-1.oci.oraclegoviaas.com",
+            "us-gov-ashburn-1.ocp.oraclegoviaas.com",
+            "us-gov-ashburn-1.ocs.oraclegoviaas.com",
+            "us-gov-chicago-1.oraclegoviaas.com",
+            "us-gov-chicago-1.oci.oraclegoviaas.com",
+            "us-gov-chicago-1.ocp.oraclegoviaas.com",
+            "us-gov-chicago-1.ocs.oraclegoviaas.com",
+            "us-gov-phoenix-1.oraclegoviaas.com",
+            "us-gov-phoenix-1.oci.oraclegoviaas.com",
+            "us-gov-phoenix-1.ocp.oraclegoviaas.com",
+            "us-gov-phoenix-1.ocs.oraclegoviaas.com",
+            "us-langley-1.oraclegoviaas.com",
+            "us-langley-1.oci.oraclegoviaas.com",
+            "us-langley-1.ocp.oraclegoviaas.com",
+            "us-langley-1.ocs.oraclegoviaas.com",
+            "us-luke-1.oraclegoviaas.com",
+            "us-luke-1.oci.oraclegoviaas.com",
+            "us-luke-1.ocp.oraclegoviaas.com",
+            "us-luke-1.ocs.oraclegoviaas.com",
+            "oraclegovcloud.com",
+            "us-gov-ashburn-1.oraclegovcloud.com",
+            "us-gov-ashburn-1.oci.oraclegovcloud.com",
+            "us-gov-ashburn-1.ocp.oraclegovcloud.com",
+            "us-gov-ashburn-1.ocs.oraclegovcloud.com",
+            "us-gov-chicago-1.oraclegovcloud.com",
+            "us-gov-chicago-1.oci.oraclegovcloud.com",
+            "us-gov-chicago-1.ocp.oraclegovcloud.com",
+            "us-gov-chicago-1.ocs.oraclegovcloud.com",
+            "us-gov-phoenix-1.oraclegovcloud.com",
+            "us-gov-phoenix-1.oci.oraclegovcloud.com",
+            "us-gov-phoenix-1.ocp.oraclegovcloud.com",
+            "us-gov-phoenix-1.ocs.oraclegovcloud.com",
+            "us-langley-1.oraclegovcloud.com",
+            "us-langley-1.oci.oraclegovcloud.com",
+            "us-langley-1.ocp.oraclegovcloud.com",
+            "us-langley-1.ocs.oraclegovcloud.com",
+            "us-luke-1.oraclegovcloud.com",
+            "us-luke-1.oci.oraclegovcloud.com",
+            "us-luke-1.ocp.oraclegovcloud.com",
+            "us-luke-1.ocs.oraclegovcloud.com",
+            "uk-gov-london-1.oraclegovcloud.uk",
+            "uk-gov-london-1.oci.oraclegovcloud.uk",
+            "uk-gov-london-1.ocp.oraclegovcloud.uk",
+            "uk-gov-london-1.ocs.oraclegovcloud.uk",
+            "uk-gov-london-1.oraclegoviaas.uk",
+            "uk-gov-london-1.oci.oraclegoviaas.uk",
+            "uk-gov-london-1.ocp.oraclegoviaas.uk",
+            "uk-gov-london-1.ocs.oraclegoviaas.uk",
+            "uk-gov-cardiff-1.oraclegoviaas.uk",
+            "uk-gov-cardiff-1.oci.oraclegoviaas.uk",
+            "uk-gov-cardiff-1.ocp.oraclegoviaas.uk",
+            "uk-gov-cardiff-1.ocs.oraclegoviaas.uk",
+            # Snowflakes
+            "ocistatus.com"
+        ]
+        dual_regional_zones = [
+            "kms.r1.oracleiaas.com"
+            "r1.oracleiaas.com",
+            "oracleiaas.com",
+            "uk-london-1.oraclecloud.com",
+            "eu-frankfurt-1.oraclecloud.com",
+            "us-phoenix-1.oraclecloud.com",
+            "us-ashburn-1.oraclecloud.com",
+        ]
+
+        # Some regions are homed in other locations, this is a map of the region to its actual homed region
+        region_override = {
+            "us-seattle-1": "us-phoenix-1",
+            "uk-gov-london-1": "us-phoenix-1",
+
+        }
+
+        fqdn = dns.name.from_text(self.domain)
+
+        # Check regional zones
+        region_found = False
+        for r in self.shep_regions:
+            # In OC1 we need to add additional TLDs
+            if r["realm"] == "oc1":
+                r["realm_tld"].extend(["oraclecloud.com", "customer-oci.com", "oc-test.com"])
+            for tld in r["realm_tld"]:
+                for group in ["oci.", "ocp.", "ocs.", " "]:
+                    group_tld = "{}{}".format(group, tld).strip()
+                    region = r["region"]
+                    # Set this so we know there is a region in the FQDN
+                    if region in self.domain:
+                        region_found = True
+                    regional_zone = dns.name.from_text("{}.{}".format(region, group_tld))
+                    # Check if the FQDN is part of the regional zone
+                    if fqdn.is_subdomain(regional_zone):
+                        self.logger.debug("Regional zone found '{}'".format(fqdn))
+                        self.region = r
+                        if self.region["region"] in region_override.keys():
+                            self.region_override= next(item for item in self.shep_regions if item["region"] == region_override[self.region["region"]])
+                            self.logger.info("Regional override set for '{}' to '{}'".format(regional_zone, region_override[self.region["region"]]))
+
+                        # Not quite right
+                        self.zone = regional_zone.to_text(True)
+                        # Zones can exist in both systems
+                        if self.zone in dual_regional_zones:
+                            self.is_dyn = True
+                            self.is_oci = True
+                        elif self.zone in dyn_tld_zones:
+                            self.is_dyn = True
+                            # Override zone in dynect
+                            #self.zone = tld
+                        else:
+                            self.is_oci = True
+                            self.is_self_service = True
+                        return
+
+        # Check for global zones
+        for r in self.shep_regions:
+            # In OC1 we need to add additional TLDs
+            if r["realm"] == "oc1":
+                r["realm_tld"].extend(["oraclecloud.com", "customer-oci.com", "oc-test.com"])
+            for tld in r["realm_tld"]:
+                # Check if this is a groupless (legacy) zone if it didnt match any regional zones
+                global_zone = dns.name.from_text("{}".format(tld))
+                if tld in self.domain and self.region == None:
+                    self.logger.debug("Global zone found '{}'".format(fqdn))
+                    try:
+                        self.region = next(item for item in self.shep_regions if tld in item["realm_tld"] and item["region"] in self.domain)
+                    except Exception as e:
+                        # Attempt to figure the region out based on the TLD if a region was not found in the FQDN
+                        if not region_found:
+                            self.logger.warn("Couldn't determine region from '{}', falling back to the realms first region".format(fqdn))
+                            self.region = next(item for item in self.shep_regions if tld in item["realm_tld"] and item["region"] == item["firstRegion"])
+
+                    # If the region could not be determined, return and let validation fail it
+                    if self.region == None:
+                        return
+
+                    if self.region["region"] in region_override.keys():
+                        self.region_override= next(item for item in self.shep_regions if item["region"] == region_override[self.region["region"]])
+                        self.logger.info("Regional override set for '{}' to '{}'".format(global_zone, region_override[self.region["region"]]))
+
+                    self.zone = global_zone.to_text(True)
+                    # TODO Ask greg what criteria are needed for `--global` to be set
+                    self.is_global = True
+
+                    if global_zone.to_text(True) in dual_regional_zones:
+                        self.is_dyn = True
+                        self.is_oci = True
+                    elif global_zone.to_text(True) in dyn_tld_zones:
+                        self.is_dyn = True
+                    else:
+                        self.is_oci = True
+                    return
+
+    def parse_records(desc, match_pattern, remove_patterns):
+        # Search the description for valid record lines
+        parsed_records = []
+        # Normalize to convert unicode spaces, then split into a list
+        if desc is None:
+            return []
+        normalized = normalize('NFKD', desc)
+        split = normalized.splitlines()
+        for line in split:
+            valid_line = re.sub("{}".format(remove_patterns), '', line)
+            m = match_pattern.match(valid_line)
+            # TODO Better regex to not need line != ''
+            if m != None and valid_line.strip() != '' and m.groupdict():
+                parsed_records.append(m.groupdict())
+
+        # Create a new dict with the fqdn as the key
+        rec_dict = {}
+        for r in parsed_records:
+            rec_dict.setdefault(r['fqdn'], []).append(r)
+        list(rec_dict.values())
+
+        # Create a new dict with the fqdn as the key
+        rdata_dict = {}
+        for r in parsed_records:
+            rdata_dict.setdefault(r['rtype'], []).append(r)
+        list(rdata_dict.values())
+
+        # Create domain record objects
+        domain_records = []
+        for fqdn, data in rec_dict.items():
+            ttl = data[0]["ttl"]
+            # If empty set to the default of 900
+            if ttl is None or ttl == "":
+                ttl = 900
+            dr = DomainRecords(fqdn, int(ttl))
+            for d in data:
+                dr.add_rrset(d["rtype"], d["rdata"].strip())
+            domain_records.append(dr)
+
+        # Add regional information to records
+        return domain_records
+
+
+
+class DNSLookup(DomainRecords):
+    def __init__(self, is_test):
+        self.logger = logging.getLogger('DNSLookup')
+
+class RecordsGateway:
+    def __init__(self):
+        self.logger = logging.getLogger('RecordsGateway')
+
+    def get_domain(self, domain_record):
+        if domain_record.is_dyn:
+            dyn = Dynect()
+            r = dyn.get_domain_records(domain_record)
+        if domain_record.is_oci:
+            pass
+
+    def get_rrset(self):
+        pass
+
+    def replace_domain(self):
+        pass
+
+    def replace_rrset(self):
+        pass
+
+class Dynect(RecordsGateway):
+    def __init__(self):
+        self.logger = logging.getLogger('Dynect')
+        if DynectSession.get_session() == None:
+            self.login()
+
+    def login(self):
+        customer = "oracledemomark"
+        username = "macannin-au"
+        password = ""
+        customer = "mattcanning"
+        username = "apiuser"
+        password = "mattmatt"
+        if username == "":
+            username = getpass.getpass(prompt='Dynect Username: ')
+        if password == "":
+            password = getpass.getpass(prompt='Dynect Password: ')
+        DynectSession(customer, username, password)
+
+    def get_domain_records(self, domain_record):
+        zone_name = domain_record.zone
+        fqdn = domain_record.domain
+        # Convert the fqdn to a node
+        node_name = fqdn.replace(".{}".format(zone_name), '')
+        zone = Zone(zone_name)
+        record = zone.get_node(node_name)
+        try:
+            all_rec = record.get_any_records()
+            domain_record.replace_rrset(self.format_rdata(all_rec))
+        except Exception as e:
+            # Return and empty list if there are no records
+            domain_record.replace_rrset([])
+
+    def add_record(self, zone, domain, rtype, rdata):
+        fqdn = "{}.{}".format(domain, zone.name)
+        logger.info("Adding {} record '{}' to '{}'".format(rtype, rdata, fqdn))
+        if rtype == "TXT":
+            # For some reason using add_record() doesnt work with TXT records
+            record = TXTRecord(zone.name, fqdn , txtdata=rdata)
+        else:
+            record = zone.add_record(domain, rtype, rdata)
+        return record
+
+    def delete_domain_records(self, domain_records):
+        for rtype, records in domain_records.items():
+            for r in records:
+                logger.info("Removing {} record '{}' from '{}'".format(r.rec_name.upper(), r.rdata(), r.fqdn))
+                r.delete()
+
+    def get_zone_changes(self, zone_name):
+        # TODO: Remove this? Might not be useful
+        response = DynectSession.get_session().execute('ZoneChanges/{}'.format(zone_name), 'GET', {})
+        for r in response["data"]:
+            rdata_type = r["rdata_type"].lower()
+            logger.info("Pending Operation on Record: %s - %s - %s - %s",
+                        r["fqdn"],
+                        rdata_type,
+                        r["rdata"]["rdata_{}".format(rdata_type)],
+                        r["id"])
+
+    def zone_publish(self, zone):
+        zone.publish()
+        logger.info("Publish zone '{}'".format(zone_name))
+
+    def replace_recordset_and_publish(self, zone_name, fqdn, records):
+        if DynectSession.get_session() == None:
+            login()
+        zone = Zone(zone_name)
+
+        # Remove existing records on node
+        domain_records = get_domain_records(zone_name, fqdn)
+        delete_domain_records(domain_records)
+
+        # Add records
+        node_name = fqdn.replace(".{}".format(zone_name), '')
+        for rtype, rdata in records.items():
+            for data in rdata:
+                add_record(zone, node_name, rtype, data)
+
+        # TODO: Remove this? Might not be useful
+        get_zone_changes(zone_name)
+
+        # Let the user confirm they want to publish the zone
+        cont = input("\nPublish the changes for zone '{}'? y/n: ".format(zone_name))
+        if cont != "y":
+            logger.info("Skipping publish of zone '{}'".format(zone_name))
+            return
+        zone_publish(zone)
+
+    def format_rrsets(self, rdata):
+        formatted_rdata = {}
+        for rdata in rdata.values():
+            for rdata in rdata:
+                rtype = rdata.rec_name.upper()
+                rdatas = rdata.rdata().values()
+                for rdata in rdatas:
+                    ## TODO must be a better way..
+                    if rtype in formatted_rdata:
+                        if rtype == 'A':
+                            formatted_rdata[rtype].append(rdata["address"])
+                        elif rtype == "TXT":
+                            formatted_rdata[rtype].append(rdata["txtdata"])
+                    else:
+                        if rtype == 'A':
+                            formatted_rdata[rtype] = [rdata["address"]]
+                        elif rtype == "TXT":
+                            formatted_rdata[rtype] = [rdata["txtdata"]]
+        return formatted_rdata
+
+class OCI(RecordsGateway):
+    def __init__(self, is_test):
+        self.logger = logging.getLogger('OCI')
+
+
+
+
+
+

@@ -52,11 +52,15 @@
 [color]
     ui = auto
 [core]
-    pager = delta --plus-color="#012800" --minus-color="#340001" --theme='Monokai Extended'
+    pager = delta
     editor = nvim
     excludesfile = ~/.gitignore
 [credential]
     helper = cache --timeout=32400
+[delta]
+    features = "Monokai Extended"
+    # minus-style = red bold ul "#340001"
+    # plus-style = green bold ul "#012800"
 [diff]
     tool = meld
 [difftool]

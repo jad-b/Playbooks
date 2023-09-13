@@ -1,0 +1,13 @@
+Revert "Wrap main logic in 'main()'"
+
+This reverts commit aed35527526ef0fe2b2ee68d725dd187dfbbc926.
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch OND-10905_manual-record-request-using-python
+# Your branch is up to date with 'origin/OND-10905_manual-record-request-using-python'.
+#
+# Changes to be committed:
+#	modified:   manual-record-requests/src/recreq/manual-record-requests.py
+#

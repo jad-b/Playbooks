@@ -191,6 +191,12 @@ dark() {
 ###############################################################################
 # String functions
 ###############################################################################
+
+3alpha() {
+  local alphabet="abcdefghijklmnopqrstuvwxyz"
+  printf "${alphabet}%.0s" {1..3} | xclipd
+}
+
 joinString() {
 	local IFS="$1"
 	shift
@@ -588,10 +594,12 @@ pullall() {
 ###############################################################################
 # Go
 ###############################################################################
-if [ -d /usr/local/go ]; then
-    export GOPATH="${HOME}"
-    export GOMAXPROCS=$(nproc)
-    export PATH="/usr/local/go/bin:${GOPATH}/bin:${PATH}"
+GO_DIR="/usr/lib/golang"
+if [ -d "${GO_DIR}" ]; then
+  # echo "Golang installation found"
+  # export GOPATH="${HOME}"
+  # export GOMAXPROCS=$(nproc)
+  export PATH="${GO_DIR}/bin:${GOPATH}/bin:${PATH}"
 fi
 
 ###############################################################################

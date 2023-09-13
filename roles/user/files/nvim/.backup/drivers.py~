@@ -1,0 +1,59 @@
+import importlib
+from argparse import Namespace
+
+import pytest
+
+# Have to use an unusal import, as hyphens
+# are not allowed in Python module names
+recreq = importlib.import_module("recreq.manual-record-requests")
+
+
+#
+# Fixtures
+########################################
+
+@pytest.fixture
+def app():
+    return Application()
+
+
+@pytest.fixture
+def tickets():
+    return Ticketing()
+
+@pytest.fixture
+def changes():
+    return ChangeRegistry()
+
+
+#
+# Drivers
+########################################
+
+
+class Application:
+
+    def validates(self, ticket):
+        print("validatin'")
+        args = Namespace()
+        args.test_jira = True
+        args.ticket_validation = [ticket]
+        recreq.main(args)
+
+
+class Ticketing:
+
+    def __init__(self):
+        pass
+
+    def has(self, ticket_id):
+        assert True
+
+
+class ChangeRegistry:
+
+    def __init__(self):
+        pass
+
+    def has_change_for(self, origin_ticket):
+        assert True

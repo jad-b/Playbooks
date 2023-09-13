@@ -1,0 +1,62 @@
+--[[
+Define keymaps of Neovim and installed plugins.
+--]]
+
+function remap(mode, rhs, lhs, bufopts, desc)
+  if bufopts == nil then
+    bufopts = {}
+  end
+  bufopts.desc = desc
+  vim.keymap.set(mode, rhs, lhs, bufopts)
+end
+
+function nnoremap(rhs, lhs, bufopts, desc)
+  if bufopts == nil then
+    bufopts = {}
+  end
+  bufopts.desc = desc
+  vim.keymap.set("n", rhs, lhs, bufopts)
+end
+
+
+local bufopts = { silent = true, noremap = true }
+
+-- END Helper functions
+
+-- disable search highlighting by pressing enter
+remap("n", "<cr>", "<cmd>:nohlsearch<cr><cr>")
+
+-- Buffer navigation
+remap("n", "gp", "<cmd>:bprevious<cr>",  bufopts, "Move to previous buffer")
+remap("n", "gn", "<cmd>:bnext<cr>",  bufopts, "Move to next buffer")
+remap("n", "gl", "<cmd>:buffers<cr>", bufopts, "List buffers")
+
+-- Window navigation
+remap("n", "<C-j>", "<C-W><C-j>", bufopts, "Lower window")
+remap("n", "<C-k>", "<C-W><C-k>", bufopts, "Above window")
+remap("n", "<C-l>", "<C-W><C-l>", bufopts, "Right window")
+remap("n", "<C-h>", "<C-W><C-h>", bufopts, "Left window")
+
+-- Copy/paste
+remap("n", "<leader>p", "\"_dP", bufopts, "Replace selected text with default register")
+
+--[[
+--Plugins
+--]]
+
+-- nvim-tree
+remap("n", "<leader>nn", "<cmd>NvimTreeToggle<cr>", bufopts, "Open file browser")
+remap("n", "<leader>nf", "<cmd>NvimTreeFindFile<cr>", bufopts, "Find in file browser")
+
+-- telescope
+local builtin = require('telescope.builtin')
+remap('n', '<leader>ff', builtin.find_files, {})
+remap('n', '<leader>fg', builtin.live_grep, {})
+remap('n', '<leader>fb', builtin.buffers, {})
+remap('n', '<leader>fh', builtin.help_tags, {})
+remap('n', "<leader>fr", builtin.lsp_references, "Find references (LSP)")
+remap('n', "<leader>fs", builtin.lsp_document_symbols, "Find symbols (LSP)")
+remap('n', "<leader>fc", builtin.lsp_incoming_calls, "Find incoming calls (LSP)")
+remap('n', "<leader>fo", builtin.lsp_outgoing_calls, "Find outgoing calls (LSP)")
+remap('n', "<leader>fi", builtin.lsp_implementations, "Find implementations (LSP)")
+remap('n', "<leader>fx", "<cmd>Telescope diagnostics bufnr=0<cr>", "Find errors (LSP)")

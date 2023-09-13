@@ -1,0 +1,57 @@
+import json
+import re
+import subprocess
+import logging
+import os
+from time import time
+from unicodedata import normalize
+from config import Config
+from sys import exit
+from subprocess import run
+
+class Util:
+
+    def get_shepherd_regions():
+        logger = logging.getLogger('Util')
+        config = Config()
+        shep_cli_path = config.get('shepherd-cli')
+        file_name = "shepherd_regions.json"
+
+        # Only redownload the file if it does not exist or is older than one month
+        one_month_ago = time() - 2630000
+        if not os.path.isfile(file_name) or os.stat(file_name).st_mtime < one_month_ago:
+            cmd = 'bash -c "cd {}/ && bash ./list_regions" > {}/{}'.format(shep_cli_path, os.getcwd(), file_name)
+            run(cmd, shell=True)
+            logger.info("Wrote to '{}/{}'".format(os.getcwd(), file_name))
+
+        # Attempt to load the json file, exit if its misformatted
+        with open(file_name) as f:
+            try:
+                regions = json.load(f)["items"]
+            except Exception as e:
+                logger.error("{} could not be loaded and will be removed.\nError: {}".format(file_name, e))
+                os.remove(file_name)
+                logger.error("Exiting")
+                exit(1)
+
+
+        # Gets a dict of regions to realm TLDs
+        r_list = []
+        test = ""
+        sorted_regions = sorted(regions, key=lambda d: d['realm']) 
+        for r in sorted_regions:
+            # Ignore regions which do not have a TLD set yet
+            if r["dnsDetails"]["iaasDomainName"] != None:
+                r_list.append({
+                    "region": r["region"],
+                    "realm": r["realm"],
+                    "state": r["state"],
+                    "change_location": "{}-{}".format(r["realm"].upper(), r["region"]),
+                    "firstRegion": r["realmAttributes"]["firstRegion"],
+                    "isDisconnected": r["realmAttributes"]["isDisconnected"],
+                    "realm_tld": [
+                        r["dnsDetails"]["iaasDomainName"].removeprefix("{}.".format(r["region"])),
+                        r["dnsDetails"]["publicDomainName"].removeprefix("{}.".format(r["region"]))
+                        ],
+                    })
+        return r_list

@@ -1,0 +1,9 @@
+from .drivers import app, tickets, changes
+
+
+def test_ticket_validates(app, tickets, changes)e
+    tickets.has("DNS-1234")
+
+    app.validates("DNS-1234")
+
+    changes.has_change_for("DNS-1234")

@@ -1,0 +1,410 @@
+import csv
+import json
+import logging
+import os.path
+import re
+import sys
+from pprint import pprint
+from subprocess import Popen, PIPE, run
+from time import sleep
+
+from recreq.config import Config
+from recreq.jiragateway import JiraGateway
+from recreq.recordgateway import RecordsGateway, DomainRecords
+from recreq.util import Util
+
+
+BREAK      = "\n*********************************************************************\n"
+
+class LegacyChangeCreate():
+
+    def __init__(self, ticket_id, team_info, domain_records, jira, config):
+        self.logger = logging.getLogger('LegacyChangeCreate')
+        self.ticket_id = ticket_id
+        self.team_info = team_info
+        self.jira = jira
+        self.config = config
+        self.master_cm_id = ""
+        # TODO simplify this situation below
+        self.dyn_regions = []
+        self.domain_records = domain_records
+        self.domain_records_platform = {}
+        self.change_locations = set([])
+        for r in self.domain_records:
+            if r.region == None:
+                continue
+            if "change_location" in r.region:
+                self.change_locations.add(r.region["change_location"])
+            if r.is_oci:
+                if "native" in self.domain_records_platform:
+                    self.domain_records_platform["native"].append(r)
+                else:
+                    self.domain_records_platform["native"] = [r]
+
+            if r.is_dyn:
+                if "dyn" in self.domain_records_platform:
+                    self.domain_records_platform["dyn"].append(r)
+                else:
+                    self.domain_records_platform["dyn"] = [r]
+
+
+        # Gather all regions to be used for this CM
+        self.logger.info("Records found in '{}':".format(self.ticket_id))
+
+    def create_change_tickets(self):
+        """Generate oci_dns_helper.sh commands and run them to create the CSV file
+        Create the CHANGE tickets from the CSV file. Set asignee.
+        """
+        if len(self.domain_records_platform) > 1:
+            self.logger.info("NOTE: Both dyn and native zones were detected in this ticket. This process will create two CMs")
+
+        # Set the base command for the bash helper
+        for platform, domain_records in self.domain_records_platform.items():
+            commands = {}
+            for idx, r in enumerate(domain_records):
+                base_cmd = "{}/oci_dns_helper.sh --odown -d {} --team '{}' --slack '{}' --just '{}' --impact '{}'".format(
+                        self.config.get('ssid-tools'),
+                        self.ticket_id,
+                        self.team_info["Service Team"],
+                        self.team_info["Public Slack Channel"],
+                        self.team_info["Business Justification"],
+                        self.team_info["Business Impact"],
+                        )
+
+                # If we have more than one region, we need to set the ticket_type to use parent/subtask
+                if any(dr.region["region"] != r.region["region"] or dr.is_global != r.is_global for dr in self.domain_records_platform[platform]):
+                    if idx == 0:
+                        ticket_type = " --parent"
+                    else:
+                        # From here on out all other tickets will be subtasks
+                        ticket_type = " --subtask"
+                    base_cmd += ticket_type
+
+                # If these are set, add them
+                if self.team_info["Blast Radius"] != None and  self.team_info["Impact Description"] != None:
+                    base_cmd += " --cust-blast '{}' --cust-impact '{}'".format(
+                            self.team_info["Blast Radius"].upper(),
+                            self.team_info["Impact Description"],
+                            )
+
+                # If this is an OCI zone we need to set additional flags
+                if platform == "native":
+                    # TODO custom boat profile?
+                    base_cmd += " --io --profile boat_us-ashburn-1 "
+                    if r.region["state"] == "Production":
+                        if r.region_override == None:
+                            base_cmd += "--oci-region {}".format(r.region["region"])
+                        else:
+                            base_cmd += "--oci-region {}".format(r.region_override["region"])
+
+                # If the region is building add the flag
+                if r.region["state"] != "Production":
+                    base_cmd += " --build"
+
+                # Add global flag if global
+                region = r.region["region"]
+                if r.is_global:
+                    region = "global"
+                    base_cmd += " --global"
+                else:
+                    if r.region_override == None:
+                        base_cmd += " --region {}".format(region)
+                    else:
+                        base_cmd += " --region {}".format(r.region_override["region"])
+
+                # Create a dict of regional commands
+                if region not in commands:
+                    commands[region] = base_cmd
+
+                # Add all rdata per region
+                for rtype, rdatas in r.get_rrsets().items():
+                    commands[region] = "{} -f '{}' ".format(commands[region], r.domain)
+                    for rdata in rdatas:
+                        # oci_dns_helper.sh uses `--address` for A records
+                        if rtype == "A":
+                            rtype = "address"
+                        commands[region] += "--{} '{}' ".format(rtype.lower(), rdata)
+                    # Add TTL
+                    commands[region] += "--ttl {} ".format(r.ttl)
+                    # If this is an NS record or we need to setup an override
+                    if rtype == "NS":
+                        commands[region] += "--zone-override {} ".format(r.domain.removeprefix("{}.".format(region)))
+                    # Some zones need to be overriden
+                    # TODO: better way?
+                    fqdn_overrides = {"kms.r1.oracleiaas.com": "r1.oracleiaas.com"}
+                    if r.domain in fqdn_overrides.keys():
+                        commands[region] += "--zone-override {} ".format(fqdn_overrides[r.domain])
+
+            # Allow user to review commands before executing
+            self.logger.info("{}Command(s) to create the '{}' CSV file:".format(BREAK, platform))
+            for cmd in commands.values():
+                # TODO: Print out commands based on if the zone is in OCI or Dyn
+                print(cmd)
+            if platform == "native":
+                input("\nThis process is about to use the oci cli, ensure you have a valid session before proceeding. Press any key to continue: ")
+            cont = input("\nEnter 'y' to execute the bash helper commands above: ")
+            print("")
+            csv_file = ""
+            if cont == "y":
+                for cmd in commands.values():
+                    CSV = re.compile('.*Creating (?:New )?File (.*.csv)$')
+                    print(cmd)
+                    # Allow the dry run command to run interactively but also save output to use to actually implement the change
+                    with Popen(cmd, shell=True, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
+                        for line in p.stdout:
+                            print(line, end = '')
+                            if CSV.match(line):
+                                csv_file = CSV.match(line).group(1).strip()
+
+            # Allow user to review go script command
+            self.logger.info("Command to create the CM, add comments, and link tickets:")
+            go_script = "export JIT_TOKEN=$(ssh operator-access-token.svc.ad1.us-ashburn-1 'generate --mode=password');cd {0}; go run {0}/dns_ssid.go -l {1}".format(self.config.get('ssid-tools'), csv_file)
+            print(go_script)
+            cont = input("\nEnter 'y' to execute the go script above: ")
+            if cont == "y":
+                output = Popen(go_script, shell=True)
+                output.communicate()
+
+        # Prompt for DNS validation
+        cont = input("\nEnter 'y' to add validation to the linked CHANGE tickets (Required for DNS CRB): ")
+        if cont == "y":
+            self.validate()
+
+
+    def validate(self):
+        """Compares the record data in the DNS ticket to each of the CHANGE tickets.
+        Adds comments with the results to each CHANGE ticket.
+        Sets the DNS ticket to 'Pending Release'.
+        Sets the parent CHANGE ticket to 'In Review' and attaches the 'dns-crb-ready' label.
+        """
+        # Gather linked CHANGE tickets from the DNS ticket
+        ticket_details = self.jira.get_ticket(self.ticket_id)
+
+        self.logger.info("{} linked issues to validate".format(len(ticket_details['Linked Issues'])))
+        for link in ticket_details['Linked Issues']:
+            if 'inwardIssue' in link:
+                cm_ticket_id = link['inwardIssue']['key']
+                cm = self.jira.get_ticket(cm_ticket_id)
+                if "CHANGE" in cm_ticket_id:
+                    # Only check this if its the master ticket
+                    if "Parent" not in cm:
+                        cm_loc = self.jira.get_change_locations(cm_ticket_id)
+                        rec_loc = self.change_locations
+                        if cm_loc != rec_loc:
+                            self.logger.warning("Warning '{0}' has differing change locations compared to the records found.\n{0} Change Locations: {1}\nParsed Record Locations: {2}'".format(cm_ticket_id, ", ".join(cm_loc), ", ".join(rec_loc)))
+                            input("\nPress any key to acknowledge this and correct this if needed. (Per DNS-CRB)")
+                    if "Master" in cm["Summary"]:
+                        self.logger.info("Master tickets do not require validation, skipping {}.".format(cm_ticket_id))
+                        continue
+                    cont = input("Enter 'y' to start adding validation to ticket {} - {}: ".format(cm_ticket_id, cm["Summary"]))
+                    if cont == "y":
+                        # Parse records from the deployment plan depending on if it is a Native or Dyn CHANGE
+                        # TODO: Handle more than one record the rdata
+                        if "OCI" in cm["Summary"]:
+                            CHANGE_MATCH= re.compile('{code}oci --profile boat_us-ashburn-1 --auth security_token --region .* dns .* update --zone-name-or-id .* --domain .* --items \"\[{\\\\"domain\\\\":\\\\"(?P<fqdn>\S+)\\\\",\\\\"rtype\\\\":\\\\"(?P<rtype>\w+)\\\\",\\\\"rdata\\\\":\\\\"(?P<rdata>.*?)\\\\",\\\\"ttl\\\\":(?P<ttl>\d*)}]')
+                        else:
+                            CHANGE_MATCH= re.compile(".*dyn-cli -v dyn -t \$\{TOKEN\} record --zone .* --fqdn (?P<fqdn>\S+) --ttl (?P<ttl>\d*) (?P<rtype>\w+) create --(?P<rtype_lower>\w+) ('\")?(?P<rdata>.*?)(\"')?;.*")
+                        parsed_cm_records = DomainRecords.parse_records(cm["Deployment Plan"], CHANGE_MATCH, '')
+                        if parsed_cm_records == []:
+                            self.logger.error("No records were parsed from {}! Returning!".format(cm_ticket_id))
+                            return
+                        self.logger.info("Records parsed from {}:\n{}".format(cm_ticket_id, parsed_cm_records))
+
+                        # Determine if the records from the CM match what was provided from the DNS ticket
+                        matched = {}
+                        region = ""
+                        for cm_rec in parsed_cm_records:
+                            if cm_rec.is_global:
+                                region = "Global"
+                            else:
+                                region = cm_rec.region["region"]
+                            matched[cm_rec.domain] = False
+                            for dns_rec in self.domain_records:
+                                # String compare here, kinda hacky but works
+                                if str(dns_rec) == str(cm_rec):
+                                    matched[cm_rec.domain] = True
+
+
+                        # Set the default color to red
+                        color = "titleBGColor=LightSalmon|bgColor=MistyRose"
+                        validation = "Unable to validate request!"
+                        fmt_rec = ""
+                        # Create output for the ticket based on if the values match or not
+                        for cm_rec in parsed_cm_records:
+                            if matched[cm_rec.domain] == True:
+                                color = "titleBGColor=LightGreen|bgColor=MintCream"
+                                validation = "Record operations match the requested records."
+                                self.logger.info("FQDN '{}' matched record in DNS ticket ".format(cm_rec.domain))
+                            else:
+                                # If any records on the CM dont match set the background to red
+                                color = "titleBGColor=LightSalmon|bgColor=MistyRose"
+                                validation = "Unable to validate request for {}!".format(cm_rec.domain)
+                                self.logger.error("FQDN '{}' did not match record in DNS ticket!".format(cm_rec.domain))
+                                self.logger.error("Missing match for record: {}".format(cm_rec))
+
+                            fmt_rec += "{}".format(cm_rec.to_jira_table_with_validation(validation))
+
+                        # Add comment to the cm ticket
+                        comment = ("{{panel:title=Record Input Pre-CM Check|{}}}\n"
+                                   "h3. Confirming the Record Details in this Change ticket align with the Requested Records in {}\n"
+                                   "* Note: This check was performed by the SSID Robots.\n"
+                                   "||Fully Qualified Domain Name||Zone||Record Data||Preferred TTL||Record Type||Input Validation||\n"
+                                   "{}\n"
+                                   "{{panel}}\n").format(color, self.ticket_id, fmt_rec).strip()
+                        print("\n\n*************************************************\n{}".format(comment))
+                        cont = input("Enter 'y' to comment and change state {}: ".format(cm_ticket_id))
+                        if cont == "y":
+                            self.jira.add_comment(cm_ticket_id, comment)
+
+                            # Add comment to master ticket
+                            if "Parent" in cm:
+                                self.master_cm_id = cm["Parent"]["key"]
+                                self.jira.add_comment(cm["Parent"]["key"], comment)
+                            else:
+                                self.master_cm_id = cm_ticket_id
+
+                            # Submit the master ticket for review
+                            self.jira.set_status(self.master_cm_id, "", "Submit for Review", {})
+
+                            # Add label if necessary
+                            #self.jira.add_label(self.master_cm_id, "dns-crb-ready")
+                            #self.logger.info("Added label '{}' to {}".format("dns-crb-ready", self.master_cm_id))
+
+
+                            # Attach implementation script to specific CM
+                            try:
+                                file_name = "Implementation_{}_{}.sh".format(self.ticket_id, region)
+                                file_path = "~/Downloads/{}".format(file_name)
+                                full_path = os.path.expanduser(file_path)
+                                self.logger.info("Validating {}".format(cm_ticket_id))
+                                if file_name in self.jira.get_attachment_names(cm_ticket_id):
+                                    self.logger.info("{} is already attached, skipping".format(file_name))
+                                else:
+                                    self.jira.attach_file(cm_ticket_id, full_path, file_name)
+                            except Exception as e:
+                                self.logger.error("Could not attach file. If this is for an OCI only CM there is no implementation script. Error {}".format(e))
+
+        # Set the DNS ticket to Pending Release
+        # TODO Better words here maybe
+        comment = "Change ticket has been created. Please follow the linked CHANGE tickets for updates. This ticket will be resolved once all CHANGE tickets have been implemented."
+        self.jira.set_status_with_prompt(self.ticket_id, comment, "Pending Release", {})
+
+
+    def implement(self):
+        """Downloads the implementation script from each CHANGE ticket and exectues each implementation script"""
+        master_cm = self.jira.get_ticket(self.ticket_id)
+        master_cm_id = self.ticket_id
+        dns_ticket = ""
+        commands = []
+
+        # Set the CM to implementing
+        if self.jira.get_status(master_cm_id) == "Manager Approved":
+            self.logger.info("Setting ticket into 'scheduled', this will 504 but will be successful.")
+            self.jira.set_status(master_cm_id, "", "Manager Apprvd: Schedule", {})
+            # Sleep to allow jira to pickup the change
+            sleep(10)
+        self.jira.set_status(master_cm_id, "", "Begin", {})
+
+        # Ensure the ticket is in 'Implementing' state
+        if not self.jira.validate_state(master_cm_id, "Implementing"):
+            self.logger.info("Ticket is not in implementing {} state. Exiting".format(master_cm_id))
+            return
+
+        from pprint import pprint
+        # Get the DNS ticket from the CHANGE ticket
+        dns_ticket = None
+        for link in master_cm['Linked Issues']:
+            dns_id = link['outwardIssue']['key']
+            dns_ticket = self.jira.get_ticket(dns_id)
+
+            # Loop over all linked CMs in the CHANGE ticket
+            for link in dns_ticket['Linked Issues']:
+                # Only continue if its a linked CHANGE ticket
+                if 'inwardIssue' in link and 'CHANGE' in link['inwardIssue']['key']:
+                    cm_id = link['inwardIssue']['key']
+                    cm = self.jira.get_ticket(dns_id)
+                    # TODO impleemnt OCI
+                    if "OCI" in cm["Summary"]:
+                        self.logger.error("Native implementation is not yet implemented! Returning.")
+                        return
+
+                    # Skip master tickets as they do not execute commands
+                    if "Master" in cm["Summary"]:
+                        self.logger.info("Master tickets do not require implementation, skipping {}.".format(cm_id))
+                        continue
+
+
+                    # Ensure a subtak is linked to the parent
+                    cm = self.jira.get_ticket(cm_id)
+                    if "Parent" in cm and cm["Parent"]["key"] != master_cm_id:
+                        self.logger.warning("Subtask '{}' is not part of parent '{}', skipping".format(cm_id, master_cm_id))
+                        continue
+                    # Ensure the implementing CM is the matching linked CM
+                    elif "Parent" not in cm and cm_id != master_cm_id:
+                        self.logger.warning("Linked ticket '{}' does not match executing CM '{}', skipping.".format(cm_id, master_cm_id))
+                        continue
+
+
+                    # Download the attachments from the change and pass them to be updated
+                    self.logger.info("Starting '{}'".format(cm_id))
+                    attachments = self.jira.get_ticket(cm_id)["Attachment"]
+                    for attachment in attachments:
+                        filename = attachment["filename"]
+                        full_path = os.path.expanduser("/tmp/{}".format(filename))
+                        if filename != "config.json":
+                            self.logger.info("Downloading '{}' from '{}'".format(filename, cm_id))
+                            file_contents = self.jira.download_file(cm_id, filename)
+                            f = open(full_path, "w")
+                            f.write(file_contents.decode())
+                            cmd = "bash {}".format(full_path)
+                            commands.append(cmd)
+
+        for cmd in commands:
+            cont = input("Enter 'y' to execute '{}': ".format(cmd))
+            implement_cmd = ""
+            if cont == "y":
+                # Allow the dry run command to run interactively but also save output to use to actually implement the change
+                with Popen(cmd, shell=True, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
+                    for line in p.stdout:
+                        print(line, end = '')
+                        if cmd in line.strip():
+                            # Gather line to execute the implemenation
+                            implement_cmd = line.strip()
+                # Now implement the script
+                cont = input("Enter 'y' to execute the implementation script '{}': ".format(implement_cmd))
+                if cont == "y":
+                    run(implement_cmd, shell=True)
+        # Set the ticket_id to the DNS ticket and begin prompting for resolution
+        self.ticket_id = dns_id
+        self.resolve()
+
+    def resolve(self):
+        """Closes the DNS ticket along with all CHANGE tickets"""
+        # Set the master CHANGE ticket id
+
+        cont = input("Enter 'y' to resolve all CHANGE tickets linked to '{}': ".format(self.ticket_id))
+        if cont == "y":
+            # Set the DNS ticket and CHANGE tickets to complete
+            ticket_details = self.jira.get_ticket(self.ticket_id)
+
+            for link in ticket_details['Linked Issues']:
+                if 'inwardIssue' in link:
+                    cm_id = link['inwardIssue']['key']
+                    cm = self.jira.get_ticket(cm_id)
+
+                    # Only mark the linked CMs as complete
+                    if "CHANGE" in cm_id:
+                        # The parent ticket has a different completion flow than subtasks
+                        if "Parent" in cm:
+                            self.jira.set_status(cm_id, "", "Start", {})
+                            self.jira.set_status(cm_id, "Release Complete", "Complete", {})
+                        else:
+                            self.jira.set_status(cm_id, "Release Complete", "Done", {"Closure Code": "Fully Successful Change"})
+
+        cont = input("Enter 'y' to resolve '{}': ".format(self.ticket_id))
+        if cont == "y":
+            # Set the DNS ticket to resolved
+            self.jira.set_status(self.ticket_id, "", "Start Progress", {})
+            self.jira.set_status(self.ticket_id, "", "Resolve Issue", {"Resolution": "Resolved"})
+
+

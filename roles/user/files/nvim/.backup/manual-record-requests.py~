@@ -1,0 +1,560 @@
+#!/usr/bin/env python3
+
+import argparse
+import logging
+import os
+import json
+import sys
+import re
+import dns.name
+import dns.rdatatype
+import dns.rdata
+import dns.query
+import dns.resolver
+import oci
+import time
+import copy
+from pprint import pprint
+
+from recreq.config import Config
+from recreq.jiragateway import JiraGateway
+from recreq.recordgateway import RecordsGateway, DomainRecords
+from recreq.legacychangecreate import LegacyChangeCreate
+
+
+#TODO Too greedy? fix
+CHANGE_PATTERN = re.compile('^CHANGE-\d+$')
+DNS_PATTERN = re.compile('^DNS-\d+$')
+RECORD_PATTERN = re.compile('^\|\s*(?P<fqdn>\S+)\s*\|(?P<rdata>.*)\|\s*(?P<ttl>\s?\d*\s?)\s*\|\s*(?P<rtype>\w+)\s*|$')
+EWR_PATTERN = re.compile('.*(https:\/\/gdnsadmin.oraclecorp.com\/a\/external_website_requests\/\d+.*|\d+).*')
+SERVICE_TEAM = re.compile('.*Service Team:(.*)$')
+PHONEBOOK = re.compile('.*Team Phonebook:(.*)$')
+JUSTIFY = re.compile('.*Provide business justification for the DNS Update:(.*)$')
+IMPACT = re.compile('.*Explain the business impact if this is not implemented:(.*)$')
+SLACK = re.compile('.*Public Slack Channel to Notify:(.*)$')
+BLAST = re.compile('.*Potential blast radius for record modification of the hostname \(SEV1,SEV2,SEV3,SEV4\): ?(SEV-?\d).*$', flags=re.IGNORECASE)
+CUST_IMPACT = re.compile('.*Potential impact to your service during modification of the hostname: (.*)$')
+BREAK      = "\n*********************************************************************\n"
+REMOVE_PATTERNS = '|'.join([
+    '{color:#\w{6}}',
+    '{color}',
+    '{noformat}',
+    '{code}',
+    ])
+
+def write_json_file(path, filename, content):
+    os.makedirs(path, exist_ok=True)
+    full_path = '{}/{}'.format(path, filename)
+    with open(full_path, 'w') as f:
+        json.dump(content, f, indent=4)
+    logger.info("Wrote file '{}' successfully".format(full_path))
+
+def validate_ticket(ticket_id, details, team_info, records):
+    failed = []
+    print("\n\n\n{}Ticket: {} ({})".format(BREAK, ticket_id, jira.get_status(ticket_id)))
+    print("Ticket Description: {}{}{}".format(BREAK, details["Description"], BREAK))
+    comment = details["Comment"]["comments"][-1]
+    print("Last comment at {} by {}:{}{}{}".format(comment["updated"], comment["author"]["displayName"], BREAK, comment["body"], BREAK))
+    print("The following {} record(s) were parsed from ticket:".format(len(records)))
+    for x in records:
+        print(x)
+    print("")
+
+    # Check for valid labels
+    if 'dns-ssid-crb-record-request-v04' not in jira.get_labels(ticket_id):
+        logger.info("{} failed validation due to missing label 'dns-ssid-crb-record-request-v04'".format(ticket_id))
+        comment = "This ticket was not created using the latest template, please recreate this ticket [here|https://confluence.oci.oraclecorp.com/x/JNk4Cw#SSID:ManualDNSRecordRequest-CreateaticketforOCIDNS].\n\nClosing as \"Won't Do\""
+        jira.set_status_with_prompt(ticket_id, comment, "Resolve Issue", {"Resolution": "Won't Do"})
+        return
+
+    # Check if this issue was cloned
+    for link in details['Linked Issues']:
+        if link['type']['outward'] == 'clones' and 'outwardIssue' in link:
+            logger.info("{} failed validation due to this issue being cloned".format(ticket_id))
+            comment = "This ticket was cloned and not created using the latest template, please recreate this ticket [here|https://confluence.oci.oraclecorp.com/x/JNk4Cw#SSID:ManualDNSRecordRequest-CreateaticketforOCIDNS].\n\nClosing as \"Won't Do\""
+            jira.set_status_with_prompt(ticket_id, comment, "Resolve Issue", {"Resolution": "Won't Do"})
+            return
+
+    # Ensure EWR filled out
+    split = details["Description"].splitlines()
+    has_ewr = False
+    for line in split:
+        m = EWR_PATTERN.match(line)
+        if m:
+            has_ewr = True
+    if not has_ewr:
+        failed.append("An EWR link was not provided. Please add an approved EWR link to the description.")
+
+
+    # Ensure team_info is fully complete
+    for name, value in team_info.items():
+        if value == None or value == "":
+            # If these are empty we should validate that the FQDNs do not contain any records today. Weird if block to only run this check once
+            record_exists = False
+            logger.info("'Impact Description' or 'Blast Radius' were not set in {}. Checking to see if a record exists per the DNS CRB".format(ticket_id))
+            for r in records:
+                for rtype, rdatas in r.rrsets.items():
+                    if dns_query(r.domain, rtype) is not None:
+                        logger.info("{} Record exists on {}".format(rtype, r.domain))
+                        record_exists = True
+            if record_exists and name == "Impact Description":
+                failed.append("{} is required per the DNS-CRB as the operation requested is modifying an existing record." .format(name))
+            elif record_exists and name == "Blast Radius":
+                failed.append("The field *'Potential blast radius for record modification of the hostname (SEV1,SEV2,SEV3,SEV4)'* needs to be one of the 4 options SEV1, SEV2, SEV3, or SEV4" .format(name))
+
+            else:
+                failed.append("{} is empty. Please ensure the default template formatting has not been modified and all fields are filled out after the colon to allow our automation to process this ticket." .format(name))
+
+
+    # Record Validation
+    if records == []:
+        failed.append("No records were found, please ensure your records are in the 'DNS Record Details' table as seen in the template [here|https://confluence.oci.oraclecorp.com/x/JNk4Cw#SSID:ManualDNSRecordRequest-CreateaticketforOCIDNS].")
+
+    # Self serivce validation
+    self_serve_zones = []
+    for r in records:
+        # If this is a self service zone we should reject and let the customer know
+        if r.is_self_service:
+            self_serve_zones.append(r.zone)
+    if self_serve_zones != []:
+        logger.warning("The following zones are self service which the customer should be able to manage. In some unique cases this request is actually intentional: {}".format(", ".join(self_serve_zones)))
+        # If it passes validation lets just create the CM, if the user chooses not to we can just add a comment
+        cont = input("Enter 'y' to add a comment and close this ticket, press any other key to ignore this warning.")
+        if cont == "y":
+            comment = "The FQDN *{}* is a self-serviceable domain. You can manage this record yourself as long as you have successfully onboarded to Self-Service Internet DNS. See https://confluence.oci.oraclecorp.com/x/oEEYG for more information or search for your teams access here: https://bitbucket.oci.oraclecorp.com/projects/DNS/repos/ssid-policies-shepherd/browse/YAML/team_access.yaml.\n\nClosing as \"Won't Do\"".format(r.domain)
+            jira.set_status_with_prompt(ticket_id, comment, "Resolve Issue", {"Resolution": "Won't Do"})
+            return
+
+    # Record Validation
+    for r in records:
+        # If zone was not set it was not a valid zone
+        if not r.zone:
+            failed.append("The FQDN *{}* does not contain a valid oracle zone. Please update your request to include the correct combination of region + realm zone in your request.".format(r.domain))
+
+        # TTL Validation
+        if r.ttl < 300 or r.ttl > 86400:
+            # If it fails validation ask the user if they want to comment it on the ticket
+            cont = input("The TTL *{}* for FQDN *{}* is outside the valid range of 300-86400s. In some cases this this acceptable. Press any key to skip this validation, enter 'y' to add the failed validation.".format(r.ttl, r.domain))
+            if cont == "y":
+                failed.append("The TTL *{}* for FQDN *{}* is outside the valid range of 300-86400s.".format(r.ttl, r.domain))
+
+        ## RRSET Validation
+        for rtype, rdatas in r.rrsets.items():
+            # RTYPE Validation
+            if rtype not in ["A", "AAAA", "CNAME", "NS", "TXT", "PTR"]:
+                failed.append("The RTYPE *{}* for FQDN *{}* is not a supported record type. Please use one of the following: A/AAAA/CNAME/NS/TXT/PTR".format(rtype, r.domain))
+
+            # PKI TXT record validation
+            if r.zone == r.domain and rtype == "TXT":
+                failed.append("We do not allow TXT records at the zone's apex. Please update the request to include use '_dnsauth.{}' instead".format(r.domain))
+
+            # Only allow '_dnsauth' TXT records in OC2/OC3/OC4
+            if rtype == "TXT" and '_dnsauth' in r.domain and r.zone not in ["oraclegovcloud.com", "oraclegoviaas.com", "oraclegovcloud.uk", "oraclegoviaas.uk"]:
+                failed.append("We only support '_dnsath' record requests in OC2, OC3, and OC4 (uk-gov-london-1). Please create a ticket with the PKI team if you need this TXT record added in a different realm.")
+
+            # RDATA Valdiation
+            for rdata in rdatas:
+                try:
+                    #TODO this doesnt throw an error if the rdata is invalid
+                    record = dns.rdata.from_text('IN', rtype, rdata)
+                except Exception as e:
+                    failed.append("The RDATA for FQDN *{}* failed with '{}'. Please ensure there are no special characters, links, and each record is on its own line in the DNS Record Details table to allow our automation to process it.".format(r.domain, e))
+
+
+    ### TODO
+    # Ensure no CNAMEs with multiple records
+    # Valid A/CNAME records
+    # Check to see if they could be using a wildcard instead
+    # Lots
+
+    if failed == []:
+        print("")
+        logger.info("{} passed validation".format(ticket_id))
+        cont = input("Enter 'y' to continue to legacy CHANGE ticket creation: ")
+        # If it passes validation lets just create the CM
+        if cont == "y":
+            # Assign the DNS ticket to the user creating the CM
+            jira.assign(ticket_id, jira.get_username())
+            jira.set_status(ticket_id, "", "Start Progress", {})
+            logger.info("Starting legacy ticket creation for {}".format(ticket_id))
+            legacy = LegacyChangeCreate(ticket_id, team_info, records, jira, config)
+            legacy.create_change_tickets()
+            legacy.validate()
+
+    else:
+        print("")
+        logger.info("{} failed validation!".format(ticket_id))
+        comment = "This ticket has failed automatic validation for the following reason(s):\n- {}\n\nPending Customer.".format("\n- ".join(failed))
+        jira.set_status_with_prompt(ticket_id, comment, "Pending Customer", {})
+
+
+    return
+
+def get_team_info(desc):
+    # Ensure team_info is fully complete
+    team_info = {
+            "Service Team": None,
+            "Team Phonebook": None,
+            "Business Justification": None,
+            "Business Impact": None,
+            "Public Slack Channel": None,
+            "Blast Radius": None,
+            "Impact Description": None,
+            }
+    if desc is None:
+        return team_info
+    split = desc.splitlines()
+    for line in split:
+        if SERVICE_TEAM.match(line):
+            team_info["Service Team"] = SERVICE_TEAM.match(line).group(1).strip()
+        if PHONEBOOK.match(line):
+            team_info["Team Phonebook"] = PHONEBOOK.match(line).group(1).strip()
+        if JUSTIFY.match(line):
+            team_info["Business Justification"] = JUSTIFY.match(line).group(1).strip()
+        if IMPACT.match(line):
+            team_info["Business Impact"] = IMPACT.match(line).group(1).strip()
+        if SLACK.match(line):
+            team_info["Public Slack Channel"] = SLACK.match(line).group(1).strip()
+        if BLAST.match(line):
+            team_info["Blast Radius"] = BLAST.match(line).group(1).strip()
+        if CUST_IMPACT.match(line):
+            team_info["Impact Description"] = CUST_IMPACT.match(line).group(1).strip()
+    return team_info
+
+def get_current_state(expected_records):
+    # Deepcopy to preserve expected records
+    current_state = copy.deepcopy(expected_records)
+    rg = RecordsGateway()
+    for r in current_state:
+        r = rg.get_domain(r)
+    return current_state
+
+def validate_dns_propagation(fqdn, rtype, expected_rdata):
+    now = time.time()
+    end_time = now + 6
+    response_rrset = None
+    dns_expected_rdata = []
+    for r in expected_rdata:
+        dns_expected_rdata.append(dns.rdata.from_text("IN", rtype, r))
+
+    expected_rdataset = dns.rdataset.from_rdata_list("30", dns_expected_rdata)
+    while response_rrset != expected_rdataset:
+        # Setup the resolver for use with the query
+        nameserver = "108.59.164.68"
+        r = dns.resolver.Resolver()
+        r.nameservers = [nameserver]
+        r.timeout = 5.0
+        r.lifetime = 5.0
+        try:
+            answers = r.resolve(fqdn, rtype)
+            response_rrset = answers.rrset.to_rdataset()
+            logging.info("Checking Propagation for {} records against {} Remaining Time: {}s".format(
+                rtype,
+                fqdn,
+                int(end_time-now)))
+        except Exception as e:
+            logging.info("Checking Propagation for {} against {}. Expecting: {} Response: {} Remaining Time: {}s Error: {}".format(
+                rtype,
+                fqdn,
+                expected_rdataset.to_text(None),
+                response_rrset.to_text(None),
+                int(end_time-now),
+                e))
+        time.sleep(1)
+        now = time.time()
+        if now > end_time:
+            cont = input("Record has not propagated yet, press 'y' to continue checking: ")
+            if cont == 'y':
+                end_time = time.time() + 6
+                now = time.time()
+            else:
+                break
+
+def dns_query(fqdn, rtype):
+    nameserver = "108.59.164.68"
+    r = dns.resolver.Resolver()
+    r.nameservers = [nameserver]
+    r.timeout = 5.0
+    r.lifetime = 5.0
+    try:
+        logging.info("Checking response for {} ".format(fqdn))
+        answers = r.resolve(fqdn, rtype)
+        response_rrset = answers.rrset.to_rdataset()
+        return response_rrset
+    except Exception as e:
+        logging.warning("{}".format(e))
+        return None
+
+def oci_get_rrset(region, zone_name, domain, rtype):
+    config = oci.config.from_file()
+    config["region"] = region
+    # Initialize service client with default config file
+    dns_client = oci.dns.DnsClient(config)
+
+
+    # Send the request to service, some parameters are not required, see API
+    # doc for more info
+    get_rr_set_response = dns_client.get_rr_set(
+            zone_name_or_id = zone_name,
+            domain = domain,
+            rtype = rtype,
+            scope = "GLOBAL")
+
+    # Get the data from response
+    print(get_rr_set_response.data)
+
+
+def implement(change_ticket, method):
+    # Ensure the ticket is in 'Implementing' state
+    if not jira.validate_state(change_ticket, "Implementing"):
+        logger.info("Not implementing {}. Exiting".format(change_ticket))
+        return
+    attachments = jira.get_ticket(change_ticket)["Attachment"]
+
+    # Download the attachments from the change and pass them to be updated
+    for attachment in attachments:
+        filename = attachment["filename"]
+        if filename != "config.json":
+            logger.info("Downloading '{}' from '{}'".format(filename, change_ticket))
+            file = jira.download_file(change_ticket, filename)
+
+            records = json.loads(file.decode('unicode_escape'))[method]
+            update_records(records)
+
+            # New
+            for rec in records:
+                record = RecordGateway(rec)
+                record.replace_records()
+                record.validate()
+
+            # New
+            records = RecordsGateway(records)
+            records.replace_records()
+            records.validate()
+
+def update_records(records):
+    for fqdn, r in records.items():
+        dyn_replace_recordset_and_publish(r["zone"], fqdn, r['records'])
+
+
+
+
+def create_change_ticket(tickets):
+    logger.info("Creating parent ticket for the following DNS tickets: {}".format(tickets))
+    config = {"parent_change": "",
+    "Test Results": "blah",
+    "Summary": "TEST CHANGE",
+    "Description": "blah",
+    "Pre-CM Checklist": "blah",
+    "Deployment Plan": "blah",
+    "Rollback Plan": "blah",
+    "Validation Actions": "blah",
+    "test": "123",
+    }
+    #parent_ticket = jira.create_ticket(True, False, "parent.j2", config)
+    #subtask_config = {"parent_change": parent_ticket}
+    parent_ticket = "CHANGE-1"
+
+    for ticket_id in tickets:
+        # Ensure the ticket is in 'Pending' state
+        #if not jira.validate_state(ticket_id, "Pending"):
+            #logger.info("Skipping {}".format(ticket_id))
+            #continue
+
+        # Get DNS ticket and parse records
+        jira_issue = jira.get_ticket(ticket_id)
+        expected_records = DomainRecords.parse_records(jira_issue["Description"], RECORD_PATTERN, REMOVE_PATTERNS)
+        for r in expected_records:
+            print(json.loads(r))
+
+        # Run the validation again in case something has changed
+        #validate_ticket(ticket_id, jira_issue, team_info, records)
+
+        # Gather the current state of the records
+        rollback_records = get_current_state(expected_records)
+
+        for r in rollback_records:
+            print(r)
+
+        # Write the json file for this ticket
+        json_file_contents = {"implement": expected_records, "rollback": rollback_records}
+        json_filename = "{}.json".format(ticket_id, ticket_id)
+        json_filepath = "{}/{}".format(parent_ticket, json_filename)
+        write_json_file(parent_ticket, json_filename, json.dumps(json_file_contents, default=vars))
+        #jira.attach_file(parent_ticket, json_filepath, json_filename)
+
+        subtask_config["ticket_id"] = ticket_id
+        subtask_config["record_details"] = records
+        subtask_config["test_results"] = records
+        subtask_config["implementation_steps"] = records
+        subtask_config["validation"] = records
+        subtask_config["rollback_steps"] = records
+        subtask_config["rollback_validation"] = records
+
+        logger.info("Creating sub-task for {}".format(ticket_id))
+        #child_ticket = jira.create_ticket(True, False, "subtask_template.j2", subtask_config)
+        logger.info("Linking {} to {}".format(ticket_id, child_ticket))
+        jira.link_ticket(child_ticket, "Resolves", ticket_id)
+        comment = "Change ticket has been created. Please follow {0} for updates. This ticket will be resolved once the {0} has been implemented".format(parent_ticket)
+        #jira.set_status(ticket_id, "", "Start Progress", {})
+        #jira.set_status(ticket_id, comment, "Pending Release", {})
+
+def args():
+    parser = argparse.ArgumentParser(description='Handles Manual Record Requests for SSID')
+    parser.add_argument('-t', '--ticket-validation', type=str, nargs='*', help='List of DNS ticket(s) to validate for proper formatting and content. Leave empty to search for all tickets in the queue.')
+    parser.add_argument('-lc', '--legacy-create', type=str, nargs='*', help='List of DNS ticket(s) to create a CHANGE tickets for using the oci_bash_helper.sh and dns_ssid.go scripts.')
+    parser.add_argument('-li', '--legacy-implement', type=str, help='CHANGE ticket to implement by shelling out to the legacy implementation bash script')
+    #parser.add_argument('-li', '--legacy-implement', type=str, nargs='*', help='CHANGE ticket to implement by shelling out to the legacy implementation bash script')
+    parser.add_argument('-lv', '--legacy-validate', type=str, nargs='*', help='List of DNS ticket(s) to validate for the DNS CRB')
+    parser.add_argument('-lr', '--legacy-resolve', type=str, nargs='*', help='List of DNS ticket(s) to resolve along with the CHANGE tickets after legacy implementation.')
+    parser.add_argument('--verbose', action=argparse.BooleanOptionalAction, help='Set this flag to enable DEBUG logging.')
+    parser.add_argument('--test-jira', action=argparse.BooleanOptionalAction, help='Set this flag to use the test JIRA instance instead of production. See the README for more info.')
+    parser.add_argument('-c', '--create', type=str, nargs='*', help='***NOT TESTED*** - List of DNS ticket(s) to create a new-style CHANGE ticket for.')
+    parser.add_argument('-v', '--validate', type=str, nargs='*', help='***NOT TESTED*** - List of DNS ticket(s) to validate implementation for.')
+    parser.add_argument('-i', '--implement', type=str, help='***NOT TESTED*** - CHANGE ticket to implement.')
+    # TODO maybe this should be CM ticket not DNS?
+    parser.add_argument('-r', '--rollback', type=str, help='***NOT TESTED*** - CHANGE ticket to rollback to the previous state.')
+
+    # Validation
+    args = parser.parse_args()
+    for arg in vars(args):
+        value = getattr(args, arg)
+        if arg in ['test_jira', 'verbose']:
+            continue
+        if arg in ['legacy_implement', 'implement', 'rollback'] and value:
+        #if arg in ['implement', 'rollback'] and value:
+            m = CHANGE_PATTERN.match(value)
+            if m == None:
+                logger.error("Argument '{}' does not match CHANGE-XXXXXX! Exiting".format(value))
+                sys.exit(1)
+        elif arg != 'implement' and value:
+            for dns_ticket in value:
+                m = DNS_PATTERN.match(dns_ticket)
+                if m == None:
+                    logger.error("Argument '{}' does not match DNS-XXXXX! Exiting".format(dns_ticket))
+                    sys.exit(1)
+    return args
+
+# TODO Testing removal of go script
+def csv_parse():
+    import csv
+    csv_file = '/Users/macannin/Downloads/DNS_Bulk_Change_2023-08-07.csv'
+    csv.field_size_limit(sys.maxsize)
+    add_fields = {}
+    #add_fields["LABELS"] = ["stencil"]
+    #add_fields["customfield_10401"] = "VALID"
+    #add_fields["Validation_Actions"] = "VALID"
+    #add_fields["Validation"] = "VALID"
+    add_fields["parent_change"] = ""
+    with open(csv_file, newline='', encoding="ascii") as f:
+        reader = csv.DictReader(f, quoting=csv.QUOTE_ALL, skipinitialspace=True)
+        for row in reader:
+            add_fields["Deployment Plan"] = row["Deployment Plan"].replace('\"', '\\\"').replace('\\$', '\\\$').replace("\n", ' \\\\\\\\ ')
+            add_fields["Rollback Plan"] = row["Rollback Plan"].replace('\"', '\\\"').replace('\\$', '\\\$').replace("\n", ' \\\\\\\\ ')
+            add_fields["Validation Actions"] = row["Validation Actions"].replace('\"', '\\\"').replace('\\$', '\\\$').replace("\n", ' \\\\\\\\ ')
+
+            fields = row | add_fields
+            pprint(fields)
+
+            if add_fields["parent_change"] == "":
+                parent_change = jira.create_ticket(True, False, "empty.j2", fields)
+                add_fields["parent_change"] = parent_change
+            else:
+                subtask = jira.create_ticket(True, False, "empty.j2", fields)
+    sys.exit()
+
+
+def main(args):
+    if args.verbose:
+        logging.basicConfig(level=os.environ.get("LOGLEVEL", "DEBUG"))
+    else:
+        logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+
+    jira = JiraGateway(args.test_jira)
+    config = Config()
+
+    #TODO Testing
+    #csv_parse()
+
+    if args.ticket_validation != None:
+        ticket_ids = args.ticket_validation
+        # Search for tickets if no values were passed in
+        if ticket_ids == []:
+            ticket_ids = jira.search()
+
+        for ticket_id in ticket_ids:
+            logger.info("Starting ticket validation for {}".format(ticket_id))
+            jira_issue = jira.get_ticket(ticket_id)
+            desc = jira_issue["Description"]
+            records = DomainRecords.parse_records(desc, RECORD_PATTERN, REMOVE_PATTERNS)
+            team_info = get_team_info(desc)
+            validate_ticket(ticket_id, jira_issue, team_info, records)
+
+        if ticket_ids == []:
+            logger.info("No tickets were found in the filter!")
+
+    if args.create:
+        logger.info("Starting ticket creation for {}".format(", ".join(args.create)))
+        create_change_ticket(args.create)
+
+    if args.legacy_create:
+        ticket_ids = args.legacy_create
+        for ticket_id in ticket_ids:
+            logger.info("Starting legacy ticket creation for {}".format(", ".join(args.legacy_create)))
+            jira_issue = jira.get_ticket(ticket_id)
+            desc = jira_issue["Description"]
+            records = DomainRecords.parse_records(desc, RECORD_PATTERN, REMOVE_PATTERNS)
+            team_info = get_team_info(desc)
+            legacy = LegacyChangeCreate(ticket_id, team_info, records, jira, config)
+            legacy.create_change_tickets()
+
+    if args.legacy_implement:
+        ticket_id = args.legacy_implement
+        logger.info("Starting legacy ticket implementation for {}".format(args.legacy_implement))
+        #TODO this is unnecessary
+        jira_issue = jira.get_ticket(ticket_id)
+        desc = jira_issue["Description"]
+        records = DomainRecords.parse_records(desc, RECORD_PATTERN, REMOVE_PATTERNS)
+        team_info = get_team_info(desc)
+        legacy = LegacyChangeCreate(ticket_id, team_info, records, jira, config)
+        legacy.implement()
+
+    if args.legacy_validate:
+        ticket_ids = args.legacy_validate
+        for ticket_id in ticket_ids:
+            logger.info("Starting legacy ticket validation for {}".format(", ".join(args.legacy_validate)))
+            jira_issue = jira.get_ticket(ticket_id)
+            desc = jira_issue["Description"]
+            records = DomainRecords.parse_records(desc, RECORD_PATTERN, REMOVE_PATTERNS)
+            team_info = get_team_info(desc)
+            legacy = LegacyChangeCreate(ticket_id, team_info, records, jira, config)
+            legacy.validate()
+
+    if args.legacy_resolve:
+        ticket_ids = args.legacy_resolve
+        for ticket_id in ticket_ids:
+            logger.info("Starting legacy ticket resolution for {}".format(", ".join(args.legacy_resolve)))
+            jira_issue = jira.get_ticket(ticket_id)
+            desc = jira_issue["Description"]
+            records = DomainRecords.parse_records(desc, RECORD_PATTERN, REMOVE_PATTERNS)
+            team_info = get_team_info(desc)
+            legacy = LegacyChangeCreate(ticket_id, team_info, records, jira, config)
+            legacy.resolve()
+
+    if args.implement:
+        logger.info("Starting implementation {}".format(args.implement))
+        implement(args.implement, "implement")
+
+    if args.rollback:
+        logger.info("Starting rollback for {}".format(args.rollback))
+        implement(args.rollback, "rollback")
+
+    if args.validate:
+        logger.info("Starting release validation for {}".format(args.validate))
+        validate_records(ticket_id, records)
+
+
+if __name__ == '__main__':
+    logger = logging.getLogger('ssid-manual-record-requests')
+    args = args()
+    main(args)
